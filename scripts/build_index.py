@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """Build data/index.json from curated open-source alternative lists.
 
-Usage: python scripts/build_index.py
+Usage: GITHUB_TOKEN=... python scripts/build_index.py
 Stdlib only. Run weekly by .github/workflows/update-index.yml.
+
+With GITHUB_TOKEN set, each GitHub repo is enriched with stars ("st"), last push
+("up") and platforms ("p") detected from its latest release assets and topics.
+Without it, those fields are kept from the previous index.
 """
 import json
+import os
 import re
 import urllib.request
 from pathlib import Path
@@ -126,6 +131,113 @@ def parse_openalternative(md):
     return out
 
 
+PLATFORMS = ("windows", "macos", "linux", "android", "ios")
+# Release asset name (lowercase) -> platform. Checked as substrings.
+ASSET_HINTS = {
+    "windows": (".exe", ".msi", ".msix", ".appx", "win64", "win32", "windows", "-win.", "_win."),
+    "macos": (".dmg", ".pkg", "macos", "darwin", "osx", "-mac.", "_mac.", "universal.zip"),
+    "linux": (".appimage", ".deb", ".rpm", ".flatpak", ".snap", "linux"),
+    "android": (".apk", ".aab", "android"),
+    "ios": (".ipa",),
+}
+# Whole words in topics/name/description/category -> platforms.
+WORD_HINTS = {
+    "windows": ["windows"], "win32": ["windows"], "wpf": ["windows"], "winforms": ["windows"],
+    "macos": ["macos"], "osx": ["macos"], "mac": ["macos"],
+    "linux": ["linux"], "gnome": ["linux"], "kde": ["linux"], "flatpak": ["linux"],
+    "android": ["android"], "ios": ["ios"], "iphone": ["ios"], "ipad": ["ios"],
+    "electron": ["windows", "macos", "linux"], "tauri": ["windows", "macos", "linux"],
+    "cross-platform": ["windows", "macos", "linux"], "crossplatform": ["windows", "macos", "linux"],
+    "react-native": ["android", "ios"],
+    "flutter": ["android", "ios"],
+}
+
+
+def detect_platforms(words, assets=()):
+    """words: iterable of lowercase tokens/topics; assets: release asset names."""
+    found = set()
+    for w in words:
+        found.update(WORD_HINTS.get(w, ()))
+    for a in assets:
+        a = a.lower()
+        for p, hints in ASSET_HINTS.items():
+            # "darwin"/"linux" tarballs of CLIs still run there, so substrings are fine.
+            if any(h in a for h in hints):
+                found.add(p)
+    return [p for p in PLATFORMS if p in found]
+
+
+def tokens(text):
+    return re.findall(r"[a-z0-9][a-z0-9+-]*", (text or "").lower())
+
+
+GQL = """{%s}"""
+GQL_REPO = """r%d: repository(owner: %s, name: %s) {
+  stargazerCount pushedAt
+  repositoryTopics(first: 20) { nodes { topic { name } } }
+  releases(first: 1, orderBy: {field: CREATED_AT, direction: DESC}) {
+    nodes { releaseAssets(first: 50) { nodes { name } } } }
+}"""
+
+
+def graphql(query, token):
+    req = urllib.request.Request(
+        "https://api.github.com/graphql", data=json.dumps({"query": query}).encode(),
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        return json.load(r).get("data") or {}
+
+
+def enrich(items, token, batch=50):
+    repos = sorted({e["r"] for e in items if e["r"]})
+    info = {}
+    for i in range(0, len(repos), batch):
+        chunk = repos[i:i + batch]
+        parts = []
+        for j, url in enumerate(chunk):
+            owner, name = url.split("/")[3:5]
+            parts.append(GQL_REPO % (j, json.dumps(owner), json.dumps(name)))
+        try:
+            data = graphql(GQL % "\n".join(parts), token)
+        except Exception as e:  # one bad batch must not kill the build
+            print(f"enrich batch {i}: {e}")
+            continue
+        for j, url in enumerate(chunk):
+            d = data.get(f"r{j}")
+            if not d:  # renamed, deleted or private
+                continue
+            rel = (d["releases"]["nodes"] or [{}])[0]
+            info[url.lower()] = {
+                "st": d["stargazerCount"], "up": (d["pushedAt"] or "")[:10],
+                "topics": [n["topic"]["name"] for n in d["repositoryTopics"]["nodes"]],
+                "assets": [a["name"] for a in (rel.get("releaseAssets") or {}).get("nodes", [])],
+            }
+    print(f"enriched {len(info)}/{len(repos)} repos")
+    return info
+
+
+def add_platforms(items, info):
+    for e in items:
+        x = info.get((e["r"] or "").lower(), {})
+        words = tokens(f'{e["n"]} {e["d"]} {e["c"]}') + x.get("topics", [])
+        p = detect_platforms(words, x.get("assets", []))
+        if p:
+            e["p"] = p
+        for k in ("st", "up"):
+            if x.get(k):
+                e[k] = x[k]
+
+
+def previous_info():
+    """Reuse enrichment from the last index when no token is available."""
+    try:
+        old = json.loads(OUT.read_text())
+    except (OSError, ValueError):
+        return {}
+    return {e["r"].lower(): {"st": e.get("st"), "up": e.get("up"), "topics": e.get("p", [])}
+            for e in old if e.get("r")}
+
+
 PARSERS = {"runa": parse_runa, "btw": parse_btw, "instead-of": parse_instead_of,
            "selfhosted": parse_selfhosted, "saas": parse_saas, "openalternative": parse_openalternative}
 
@@ -142,6 +254,9 @@ def main():
         items += got
     if not items:
         raise SystemExit("no entries parsed, keeping old index")
+    token = os.environ.get("GITHUB_TOKEN")
+    add_platforms(items, enrich(items, token) if token else previous_info())
+    print(f'platforms known for {sum(1 for e in items if e.get("p"))} entries')
     OUT.write_text(json.dumps(items, ensure_ascii=False, separators=(",", ":")))
     print(f"wrote {len(items)} entries to {OUT}")
 

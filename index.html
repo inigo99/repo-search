@@ -35,6 +35,20 @@
     border-radius: 999px; text-decoration: none; }
   .examples a:hover { color: var(--fg); border-color: var(--muted); }
   body.searched .examples { display: none; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; justify-content: center;
+    margin-top: 16px; font-size: 14px; color: var(--muted); }
+  body.searched .controls { justify-content: flex-start; margin-top: 12px; }
+  .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0; padding: 0; border: 0; }
+  .group legend { float: left; margin-right: 4px; padding: 0; }
+  .chip { position: relative; }
+  .chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .chip span { display: inline-block; border: 1px solid var(--line); padding: 3px 12px; border-radius: 999px;
+    cursor: pointer; color: var(--fg); user-select: none; }
+  .chip input:checked + span { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+  .chip input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  select { font: inherit; color: var(--fg); background: var(--card); border: 1px solid var(--line);
+    border-radius: 8px; padding: 3px 8px; }
+  .plat { border: 1px solid var(--line); padding: 0 7px; border-radius: 6px; }
   #meta { color: var(--muted); font-size: 14px; margin: 8px 4px 20px; }
   #meta b { color: var(--fg); font-weight: 600; }
   h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 28px 4px 10px; }
@@ -43,6 +57,7 @@
   .r a.t:hover { text-decoration: underline; }
   .r p { margin: 4px 0 8px; }
   .m { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 13px; color: var(--muted); }
+  .m a { color: var(--muted); }
   .tag { background: var(--tag); color: var(--fg); padding: 1px 8px; border-radius: 6px; }
   .note { color: var(--muted); padding: 4px; }
   .err { color: #b4432f; }
@@ -51,10 +66,36 @@
     background: var(--card); border: 1px solid var(--line); border-radius: 8px; }
   footer { margin-top: 24px; font-size: 13px; color: var(--muted); text-align: center; }
   footer a { color: inherit; }
+  .tabs { display: flex; justify-content: flex-end; gap: 4px; padding-top: 16px; }
+  .tabs a { color: var(--muted); text-decoration: none; padding: 6px 14px; border-radius: 999px; font-size: 15px; }
+  .tabs a[aria-current="page"] { color: var(--fg); background: var(--tag); font-weight: 600; }
+  .r .h { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; }
+  button.ghost { padding: 4px 12px; font-size: 13px; font-weight: 500; background: transparent;
+    color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+  button.ghost:hover { color: var(--fg); border-color: var(--muted); }
+  button.ghost.on { color: var(--accent); border-color: var(--accent); }
+  #saved-view h1 { font-size: 28px; margin: 24px 0 16px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
+  .bar .sp { flex: 1; }
+  dialog { border: 1px solid var(--line); border-radius: 14px; padding: 20px; background: var(--card);
+    color: var(--fg); width: min(420px, calc(100vw - 32px)); }
+  dialog::backdrop { background: rgb(0 0 0 / .4); }
+  dialog h3 { margin: 0 0 4px; word-break: break-word; }
+  dialog .cats { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0; }
+  dialog .new { display: flex; gap: 8px; }
+  dialog .new input { flex: 1; min-width: 0; padding: 6px 10px; font: inherit; color: var(--fg);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px; }
+  dialog .act { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+  dialog .act button { padding: 8px 18px; }
 </style>
 </head>
 <body>
 <main>
+  <nav class="tabs" aria-label="Views">
+    <a href="#" id="tab-search">Search</a>
+    <a href="#saved" id="tab-saved">Saved <span id="saved-count"></span></a>
+  </nav>
+  <section id="search-view">
   <header>
     <h1>repo<span>search</span></h1>
     <p class="sub">Free, open-source alternatives to any software — or tools and plugins by what they do.<br>Type in English or Spanish.</p>
@@ -62,6 +103,26 @@
       <input id="q" type="search" placeholder="e.g. Adobe Acrobat, unir PDFs, VS Code plugin for markdown…" aria-label="Search" autofocus>
       <button>Search</button>
     </form>
+    <div class="controls">
+      <fieldset class="group">
+        <legend>Desktop</legend>
+        <label class="chip"><input type="checkbox" name="platform" value="windows"><span>Windows</span></label>
+        <label class="chip"><input type="checkbox" name="platform" value="macos"><span>macOS</span></label>
+        <label class="chip"><input type="checkbox" name="platform" value="linux"><span>Linux</span></label>
+      </fieldset>
+      <fieldset class="group">
+        <legend>Mobile</legend>
+        <label class="chip"><input type="checkbox" name="platform" value="android"><span>Android</span></label>
+        <label class="chip"><input type="checkbox" name="platform" value="ios"><span>iOS</span></label>
+      </fieldset>
+      <label>Sort by
+        <select id="sort">
+          <option value="match">Best match</option>
+          <option value="stars">Most stars</option>
+          <option value="updated">Recently updated</option>
+        </select>
+      </label>
+    </div>
     <div class="examples">
       <a href="?q=Adobe+Acrobat">Adobe Acrobat</a>
       <a href="?q=alternativa+a+Photoshop">alternativa a Photoshop</a>
@@ -72,11 +133,25 @@
   </header>
   <div id="meta"></div>
   <div id="out"></div>
+  </section>
+  <section id="saved-view" hidden>
+    <h1>Saved repositories</h1>
+    <div class="bar">
+      <div id="saved-cats" class="group" role="group" aria-label="Filter by category"></div>
+      <span class="sp"></span>
+      <button class="ghost" id="del-cat" hidden>Delete category</button>
+      <button class="ghost" id="export">Export</button>
+      <button class="ghost" id="import-btn">Import</button>
+      <input id="import" type="file" accept="application/json,.json" hidden>
+    </div>
+    <div id="saved-list"></div>
+    <p class="note">Saved in this browser only. Use Export / Import to move them to another device.</p>
+  </section>
   <details>
     <summary>GitHub token (optional)</summary>
-    Without a token GitHub allows about 10 searches per minute. A token with no scopes raises that limit.
-    It is stored only in this browser.
-    <input id="token" type="password" placeholder="ghp_…" autocomplete="off">
+    Without a token GitHub allows about 10 searches per minute. A token with no permissions raises that limit
+    (see the README). It is stored only in this browser.
+    <input id="token" type="password" placeholder="github_pat_…" autocomplete="off">
   </details>
   <footer>Curated data from <a href="https://github.com/RunaCapital/awesome-oss-alternatives">awesome-oss-alternatives</a>,
     <a href="https://github.com/btw-so/open-source-alternatives">open-source-alternatives</a>,
@@ -86,71 +161,275 @@
     <a href="https://github.com/piotrkulpinski/open-source-alternatives">OpenAlternative</a>, plus the GitHub Search API.
     · <a href="https://github.com/inigo99/repo-search">Source</a></footer>
 </main>
+<dialog id="dlg" aria-labelledby="dlg-title">
+  <form method="dialog" id="dlg-form">
+    <h3 id="dlg-title"></h3>
+    <div class="note" style="padding:0">Choose one or more categories.</div>
+    <div class="cats" id="dlg-cats"></div>
+    <div class="new">
+      <input id="dlg-new" placeholder="New category" aria-label="New category" maxlength="40">
+      <button class="ghost" type="button" id="dlg-add">Add</button>
+    </div>
+    <div class="act">
+      <button class="ghost" type="button" id="dlg-remove">Remove</button>
+      <button class="ghost" type="button" id="dlg-cancel">Cancel</button>
+      <button value="save">Save</button>
+    </div>
+  </form>
+</dialog>
 <script src="core.js"></script>
 <script>
 const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const safeUrl = (u) => /^https?:\/\//.test(u || "") ? u : "#";
 const store = { get(k) { try { return localStorage.getItem(k) || ""; } catch { return ""; } },
-                set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+                set(k, v) { try { localStorage.setItem(k, v); return true; } catch { return false; } } };
+const PLAT_LABEL = { windows: "Windows", macos: "macOS", linux: "Linux", android: "Android", ios: "iOS" };
 
 $("token").value = store.get("gh_token");
 $("token").onchange = (e) => store.set("gh_token", e.target.value.trim());
 
 const data = Promise.all(["es-en", "apps", "index"].map((n) => fetch(`data/${n}.json`).then((r) => r.json())));
 
-function card(title, url, desc, meta) {
-  return `<div class="r"><a class="t" href="${esc(safeUrl(url))}" target="_blank" rel="noopener">${esc(title)}</a>
-    ${desc ? `<p>${esc(desc)}</p>` : ""}<div class="m">${meta.filter(Boolean).join("")}</div></div>`;
+// ---------- saved repos (this browser only) ----------
+let saved = (() => { try { return JSON.parse(store.get("saved") || "{}") || {}; } catch { return {}; } })();
+function persist() {
+  if (!store.set("saved", JSON.stringify(saved))) alert("Could not save: browser storage is unavailable.");
+  $("saved-count").textContent = Object.keys(saved).length || "";
 }
+persist();
+
+// Items shown on screen, by url, so the save dialog knows what it is saving.
+const shown = new Map();
+
+// ---------- cards ----------
 const tag = (s) => s ? `<span class="tag">${esc(s)}</span>` : "";
 const txt = (s) => s ? `<span>${esc(s)}</span>` : "";
+const plats = (list) => (list || []).map((p) => `<span class="plat">${esc(PLAT_LABEL[p] || p)}</span>`).join("");
+const date = (d) => d ? txt("updated " + String(d).slice(0, 10)) : "";
+const stars = (n) => n != null ? txt("★ " + Number(n).toLocaleString("en")) : "";
 
+function card(item, meta) {
+  shown.set(item.url, item);
+  const s = saved[item.url];
+  return `<div class="r"><div class="h">
+      <a class="t" href="${esc(safeUrl(item.url))}" target="_blank" rel="noopener">${esc(item.name)}</a>
+      <button class="ghost save${s ? " on" : ""}" data-url="${esc(item.url)}"
+        aria-label="${s ? "Edit saved categories for" : "Save"} ${esc(item.name)}">${s ? "★ " + esc(s.cats.join(", ") || "Saved") : "☆ Save"}</button>
+    </div>
+    ${item.desc ? `<p>${esc(item.desc)}</p>` : ""}<div class="m">${meta.filter(Boolean).join("")}</div></div>`;
+}
+
+const curatedCard = (e) => card({ name: e.n, url: e.r || e.u, desc: e.d, stars: e.st }, [
+  stars(e.st), tag(e.c), plats(e.p), e.a.length ? txt("replaces " + e.a.join(", ")) : "", date(e.up),
+  e.r && e.u !== e.r ? `<a href="${esc(safeUrl(e.u))}" target="_blank" rel="noopener">website</a>` : ""]);
+
+const githubCard = (r) => card({ name: r.full_name, url: r.html_url, desc: r.description, stars: r.stargazers_count }, [
+  stars(r.stargazers_count), txt(r.language), r.license ? txt(r.license.spdx_id) : "", plats(r.platforms),
+  date(r.pushed_at), ...(r.topics || []).slice(0, 4).map(tag)]);
+
+// ---------- search ----------
+const platforms = () => [...document.querySelectorAll("input[name=platform]:checked")].map((i) => i.value);
+let last = null; // { p, curated, repos, error, loading }
+
+function setUrl(q) {
+  const u = new URLSearchParams({ q });
+  if (platforms().length) u.set("p", platforms().join(","));
+  if ($("sort").value !== "match") u.set("sort", $("sort").value);
+  history.pushState(null, "", "?" + u);
+}
+
+function render() {
+  if (!last) return;
+  const { p, curated, repos, error, loading } = last;
+  const mode = $("sort").value;
+  const pl = platforms();
+  const on = pl.length ? ` · on <b>${esc(pl.map((x) => PLAT_LABEL[x]).join(" or "))}</b>` : "";
+  $("meta").innerHTML = (p.app
+    ? `Open-source alternatives to <b>${esc(p.app)}</b> (${esc(p.func)})${p.terms.length ? ` · also: <b>${esc(p.terms.join(" "))}</b>` : ""}`
+    : `Searching for <b>${esc(p.terms.join(" ") || last.query)}</b>`) + on;
+
+  shown.clear();
+  const cur = RepoSearch.sortItems(curated, mode).slice(0, 12);
+  let html = "";
+  if (cur.length) html += `<h2>Curated alternatives</h2>` + cur.map(curatedCard).join("");
+  else if (pl.length) html += `<h2>Curated alternatives</h2><p class="note">None with known support for that platform.</p>`;
+
+  html += `<h2>On GitHub</h2>`;
+  if (loading) html += `<p class="note">Loading…</p>`;
+  else if (error) html += `<p class="note err">${esc(error)}</p>`;
+  else {
+    const known = new Set(cur.map((e) => (e.r || "").toLowerCase()));
+    const list = RepoSearch.sortItems(repos.filter((r) => !known.has(r.html_url.toLowerCase())), mode).slice(0, 30);
+    html += list.length ? list.map(githubCard).join("") : `<p class="note">No GitHub results. Try fewer or different words.</p>`;
+  }
+  $("out").innerHTML = html;
+}
+
+let runId = 0;
 async function run(query) {
   query = query.trim();
   if (!query) return;
+  const id = ++runId; // ignore results of a search that was superseded
   document.body.classList.add("searched");
   $("q").value = query;
   document.title = `${query} — Repo Search`;
-  $("out").innerHTML = `<p class="note">Searching…</p>`;
   const [dict, apps, index] = await data;
   const p = RepoSearch.parseQuery(query, dict, apps);
-  $("meta").innerHTML = p.app
-    ? `Open-source alternatives to <b>${esc(p.app)}</b> (${esc(p.func)})${p.terms.length ? ` · also: <b>${esc(p.terms.join(" "))}</b>` : ""}`
-    : `Searching for <b>${esc(p.terms.join(" ") || query)}</b>`;
-
-  const curated = RepoSearch.searchIndex(p, index, 12);
-  let html = "";
-  if (curated.length) {
-    html += `<h2>Curated alternatives</h2>` + curated.map((e) =>
-      card(e.n, e.r || e.u, e.d, [tag(e.c), e.a.length ? txt("replaces " + e.a.join(", ")) : "", e.r && e.u !== e.r ? `<a href="${esc(safeUrl(e.u))}" target="_blank" rel="noopener">website</a>` : ""])).join("");
-  }
-  html += `<h2>On GitHub</h2><div id="gh"><p class="note">Loading…</p></div>`;
-  $("out").innerHTML = html;
-
+  const pl = platforms();
+  last = { query, key: `${query}|${pl}`, p, curated: RepoSearch.searchIndex(p, index, 30, pl), repos: [], loading: true };
+  render();
   try {
-    const { repos } = await RepoSearch.searchGithub(p, { token: store.get("gh_token") });
-    const known = new Set(curated.map((e) => (e.r || "").toLowerCase()));
-    const list = repos.filter((r) => !known.has(r.html_url.toLowerCase()))
-      .sort((a, b) => b.stargazers_count - a.stargazers_count).slice(0, 30);
-    $("gh").innerHTML = list.length ? list.map((r) => card(r.full_name, r.html_url, r.description, [
-      txt("★ " + r.stargazers_count.toLocaleString("en")), txt(r.language), r.license ? txt(r.license.spdx_id) : "",
-      ...(r.topics || []).slice(0, 4).map(tag)])).join("")
-      : `<p class="note">No GitHub results. Try fewer or different words.</p>`;
+    const { repos } = await RepoSearch.searchGithub(p, { token: store.get("gh_token"), platforms: pl });
+    if (id === runId) Object.assign(last, { repos, loading: false });
   } catch (e) {
-    $("gh").innerHTML = `<p class="note err">${esc(e.message)}</p>`;
+    if (id === runId) Object.assign(last, { error: e.message, loading: false });
   }
+  if (id === runId) render();
 }
 
 $("f").onsubmit = (e) => {
   e.preventDefault();
   const q = $("q").value.trim();
   if (!q) return;
-  history.pushState(null, "", "?q=" + encodeURIComponent(q));
+  setUrl(q);
+  show("search");
   run(q);
 };
-const fromUrl = () => { const q = new URLSearchParams(location.search).get("q"); if (q) run(q); };
+document.querySelectorAll("input[name=platform]").forEach((i) => i.onchange = () => {
+  if (last) { setUrl(last.query); run(last.query); }
+});
+$("sort").onchange = () => { if (last) { setUrl(last.query); render(); } };
+
+// ---------- save dialog ----------
+let editing = null;
+function dialogCats(selected) {
+  const names = [...new Set([...RepoSearch.savedCategories(saved).map((c) => c.name), ...selected])].sort((a, b) => a.localeCompare(b));
+  $("dlg-cats").innerHTML = names.length ? names.map((c) => `<label class="chip"><input type="checkbox" value="${esc(c)}"
+    ${selected.includes(c) ? "checked" : ""}><span>${esc(c)}</span></label>`).join("")
+    : `<span class="note" style="padding:0">No categories yet: create one below.</span>`;
+}
+const checkedCats = () => [...$("dlg-cats").querySelectorAll("input:checked")].map((i) => i.value);
+
+function openSave(url) {
+  const item = shown.get(url) || saved[url];
+  if (!item) return;
+  editing = item;
+  $("dlg-title").textContent = item.name;
+  $("dlg-remove").hidden = !saved[url];
+  $("dlg-new").value = "";
+  dialogCats(saved[url]?.cats || []);
+  $("dlg").showModal();
+}
+function addCategory() {
+  const c = $("dlg-new").value.trim();
+  if (!c) return;
+  dialogCats([...new Set([...checkedCats(), c])]);
+  $("dlg-new").value = "";
+  $("dlg-new").focus();
+}
+$("dlg-add").onclick = addCategory;
+$("dlg-remove").onclick = () => $("dlg").close("remove");
+$("dlg-cancel").onclick = () => $("dlg").close("cancel");
+$("dlg-new").onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); addCategory(); } };
+$("dlg").onclose = () => {
+  const action = $("dlg").returnValue;
+  $("dlg").returnValue = "";
+  if (!editing) return;
+  const { url } = editing;
+  if (action === "save") {
+    const pending = $("dlg-new").value.trim(); // typed but not added: keep it
+    const cats = [...new Set([...checkedCats(), ...(pending ? [pending] : [])])];
+    saved[url] = { name: editing.name, url, desc: editing.desc || "", stars: editing.stars ?? null,
+                   cats, added: saved[url]?.added || new Date().toISOString().slice(0, 10) };
+  } else if (action === "remove") {
+    delete saved[url];
+  } else return;
+  editing = null;
+  persist();
+  render();
+  renderSaved();
+};
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button.save");
+  if (b) openSave(b.dataset.url);
+});
+
+// ---------- saved view ----------
+let savedFilter = ""; // "" = all, "\u0000" = uncategorized, else category name
+function renderSaved() {
+  const cats = RepoSearch.savedCategories(saved);
+  if (savedFilter && savedFilter !== "\u0000" && !cats.some((c) => c.name === savedFilter)) savedFilter = "";
+  const all = Object.values(saved);
+  const none = all.filter((s) => !s.cats.length).length;
+  const chip = (value, label, n) => `<label class="chip"><input type="radio" name="savedcat" value="${esc(value)}"
+    ${savedFilter === value ? "checked" : ""}><span>${esc(label)} ${n}</span></label>`;
+  $("saved-cats").innerHTML = chip("", "All", all.length) + cats.map((c) => chip(c.name, c.name, c.count)).join("")
+    + (none ? chip("\u0000", "Uncategorized", none) : "");
+  $("saved-cats").querySelectorAll("input").forEach((i) => i.onchange = () => { savedFilter = i.value; renderSaved(); });
+  $("del-cat").hidden = !savedFilter || savedFilter === "\u0000";
+
+  const list = all.filter((s) => !savedFilter || (savedFilter === "\u0000" ? !s.cats.length : s.cats.includes(savedFilter)))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  shown.clear();
+  $("saved-list").innerHTML = list.length
+    ? list.map((s) => card(s, [stars(s.stars), ...s.cats.map(tag), txt("saved " + s.added)])).join("")
+    : `<p class="note">Nothing saved yet. Use ☆ Save on any search result.</p>`;
+}
+$("del-cat").onclick = () => {
+  if (!confirm(`Delete category "${savedFilter}"? Its repositories stay saved.`)) return;
+  saved = RepoSearch.removeCategory(saved, savedFilter);
+  savedFilter = "";
+  persist();
+  renderSaved();
+};
+$("export").onclick = () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(saved, null, 2)], { type: "application/json" }));
+  a.download = `repo-search-saved-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+$("import-btn").onclick = () => $("import").click();
+$("import").onchange = async (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  try {
+    const incoming = JSON.parse(await file.text());
+    if (!incoming || typeof incoming !== "object" || Array.isArray(incoming)) throw new Error();
+    const before = Object.keys(saved).length;
+    saved = RepoSearch.mergeSaved(saved, incoming);
+    persist();
+    renderSaved();
+    alert(`Imported. ${Object.keys(saved).length - before} new repositories.`);
+  } catch {
+    alert("That file is not a repo-search export.");
+  }
+};
+
+// ---------- views & URL ----------
+function show(view) {
+  const savedView = view === "saved";
+  $("search-view").hidden = savedView;
+  $("saved-view").hidden = !savedView;
+  $(savedView ? "tab-saved" : "tab-search").setAttribute("aria-current", "page");
+  $(savedView ? "tab-search" : "tab-saved").removeAttribute("aria-current");
+  if (savedView) renderSaved(); else render();
+}
+$("tab-search").onclick = (e) => { e.preventDefault(); history.pushState(null, "", location.search || "./"); show("search"); };
+
+function fromUrl() {
+  const u = new URLSearchParams(location.search);
+  const pl = (u.get("p") || "").split(",");
+  document.querySelectorAll("input[name=platform]").forEach((i) => i.checked = pl.includes(i.value));
+  $("sort").value = ["stars", "updated"].includes(u.get("sort")) ? u.get("sort") : "match";
+  show(location.hash === "#saved" ? "saved" : "search");
+  const q = u.get("q");
+  if (q && `${q}|${platforms()}` !== last?.key) run(q);
+}
 window.onpopstate = fromUrl;
+window.onhashchange = fromUrl;
 fromUrl();
 </script>
 </body>

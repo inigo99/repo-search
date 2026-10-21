@@ -28,15 +28,23 @@ curl -fsSO https://raw.githubusercontent.com/inigo99/repo-search/main/cli.js
 node cli.js "<user query>" --json --limit 10
 ```
 
-Set `GITHUB_TOKEN` in the environment if GitHub rate limits (10 searches/min unauthenticated).
+Options:
+- `--platform windows,macos,linux,android,ios` — only results for any of those platforms
+  (use it when the user mentions a device or OS, e.g. "para Android", "on my Mac").
+- `--sort match|stars|updated` — default `match`.
+
+Set `GITHUB_TOKEN` in the environment if GitHub rate limits (10 searches/min unauthenticated;
+each platform costs one extra search).
 
 ## Output (`--json`)
 
 - `interpreted`: how the query was understood. `app` + `func` are set when it is an
   alternative search (e.g. `app: "adobe acrobat"`, `func: "pdf editor"`); `terms` are the English keywords.
 - `curated`: hand-picked projects from awesome lists. Fields: `n` name, `r` GitHub repo,
-  `u` website, `d` description, `c` category, `a` proprietary apps it replaces.
-- `github`: live GitHub results with stars, language, description and topics.
+  `u` website, `d` description, `c` category, `a` proprietary apps it replaces,
+  `p` platforms, `st` stars, `up` last update.
+- `github`: live GitHub results with stars, language, description, topics, `updated` and
+  `platforms` (the platform filters that matched it).
 - `error`: set if GitHub could not be reached; curated results still work.
 
 ## Answering

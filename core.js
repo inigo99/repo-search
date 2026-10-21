@@ -46,8 +46,12 @@
     return { terms, app, func: app ? apps[app] : null, alt: alt || !!app, english };
   }
 
-  // Rank curated entries from data/index.json.
-  function searchIndex(p, index, limit = 30) {
+  const PLATFORMS = ["windows", "macos", "linux", "android", "ios"];
+
+  // Rank curated entries from data/index.json. `platforms`: keep entries known
+  // to run on at least one of them (entries with unknown platforms are dropped).
+  function searchIndex(p, index, limit = 30, platforms = []) {
+    if (platforms.length) index = index.filter((e) => (e.p || []).some((x) => platforms.includes(x)));
     const words = [...new Set([...p.terms, ...(p.func ? p.func.split(" ") : [])])].filter((w) => w.length > 1);
     const need = Math.max(1, Math.ceil(words.length * 0.6));
     // "alternativa a Moodle": Moodle is unknown to apps.json, but the lists may still know it.
@@ -90,27 +94,75 @@
     return [...new Set(q.filter(Boolean))];
   }
 
-  async function searchGithub(p, { token, perPage = 20, fetchFn = fetch } = {}) {
+  // GitHub search has no platform filter and its OR operator is unreliable, so each
+  // platform gets its own queries with the platform name as an extra keyword.
+  // Each repo is tagged with the platforms whose query returned it (r.platforms).
+  async function searchGithub(p, { token, perPage = 20, platforms = [], fetchFn = fetch } = {}) {
     const headers = { Accept: "application/vnd.github+json" };
     if (token) headers.Authorization = `Bearer ${token}`;
     const results = new Map();
     const used = [];
-    for (const q of githubQueries(p)) {
-      const url = `${GH_API}?per_page=${perPage}&q=${encodeURIComponent(q + " fork:false stars:>5")}`;
-      const res = await fetchFn(url, { headers });
-      if (res.status === 403 || res.status === 429)
-        throw new Error("GitHub rate limit reached. Wait a minute or add a token.");
-      if (!res.ok) throw new Error(`GitHub API error ${res.status}`);
-      const items = (await res.json()).items || [];
-      if (items.length) used.push(q);
-      for (const r of items) if (!results.has(r.full_name)) results.set(r.full_name, r);
-      // Enough results: stop. Alternative searches always also try "<app> alternative".
-      if (results.size >= perPage && !(p.app && q === p.func)) break;
+    for (const platform of platforms.length ? platforms : [""]) {
+      let got = 0;
+      for (const base of githubQueries(p)) {
+        const q = `${base} ${platform}`.trim();
+        const url = `${GH_API}?per_page=${perPage}&q=${encodeURIComponent(q + " fork:false stars:>5")}`;
+        const res = await fetchFn(url, { headers });
+        if (res.status === 403 || res.status === 429)
+          throw new Error("GitHub rate limit reached. Wait a minute or add a token.");
+        if (!res.ok) throw new Error(`GitHub API error ${res.status}`);
+        const items = (await res.json()).items || [];
+        if (items.length) used.push(q);
+        for (const r of items) {
+          if (!results.has(r.full_name)) results.set(r.full_name, { ...r, platforms: [] });
+          if (platform && !results.get(r.full_name).platforms.includes(platform))
+            results.get(r.full_name).platforms.push(platform);
+        }
+        got += items.length;
+        // Enough results: stop. Alternative searches always also try "<app> alternative".
+        if (got >= perPage && !(p.app && base === p.func)) break;
+      }
     }
     return { repos: [...results.values()], queries: used };
   }
 
-  const api = { norm, parseQuery, searchIndex, githubQueries, searchGithub };
+  // mode: "match" (keep relevance order), "stars" or "updated". Works for curated
+  // entries (st, up) and GitHub repos (stargazers_count, pushed_at).
+  const SORT_KEYS = {
+    stars: (x) => x.st ?? x.stargazers_count ?? -1,
+    updated: (x) => x.up ?? x.pushed_at ?? "",
+  };
+  function sortItems(items, mode) {
+    const k = SORT_KEYS[mode];
+    if (!k) return items;
+    return [...items].sort((a, b) => (k(a) < k(b) ? 1 : k(a) > k(b) ? -1 : 0));
+  }
+
+  // Saved repos: { [url]: { name, url, desc, stars, cats: [..], added } }.
+  // A repo can be in several categories; an empty list means "Uncategorized".
+  function savedCategories(saved) {
+    const count = {};
+    for (const s of Object.values(saved)) for (const c of s.cats) count[c] = (count[c] || 0) + 1;
+    return Object.keys(count).sort((a, b) => a.localeCompare(b)).map((name) => ({ name, count: count[name] }));
+  }
+  function removeCategory(saved, cat) {
+    const out = {};
+    for (const [k, s] of Object.entries(saved)) out[k] = { ...s, cats: s.cats.filter((c) => c !== cat) };
+    return out;
+  }
+  // Import: union of repos and of their categories; existing data wins otherwise.
+  function mergeSaved(mine, incoming) {
+    const out = { ...mine };
+    for (const [k, s] of Object.entries(incoming || {})) {
+      if (!s || typeof s.url !== "string" || !Array.isArray(s.cats)) continue; // ignore junk
+      const cats = s.cats.filter((c) => typeof c === "string" && c.trim()).map((c) => c.trim());
+      out[k] = out[k] ? { ...out[k], cats: [...new Set([...out[k].cats, ...cats])] } : { ...s, cats };
+    }
+    return out;
+  }
+
+  const api = { norm, parseQuery, searchIndex, githubQueries, searchGithub, sortItems, PLATFORMS,
+    savedCategories, removeCategory, mergeSaved };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.RepoSearch = api;
 })(this);

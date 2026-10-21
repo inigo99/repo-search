@@ -45,5 +45,45 @@ assert.deepStrictEqual(core.githubQueries(P("unir pdf")), ["merge pdf", "merge"]
   });
   assert.strictEqual(alt.repos.length, 2);
   await assert.rejects(core.searchGithub(P("pdf"), { fetchFn: async () => ({ ok: false, status: 403 }) }), /rate limit/);
-  console.log("all tests passed");
+
+  // Platforms: one query per platform, repos tagged with every platform that found them
+  const plat = await core.searchGithub(P("unir pdf"), {
+    platforms: ["windows", "linux"],
+    fetchFn: fake({ "merge pdf windows": [{ full_name: "a/b" }], "merge pdf linux": [{ full_name: "a/b" }, { full_name: "c/d" }] }),
+  });
+  assert.deepStrictEqual(plat.queries, ["merge pdf windows", "merge pdf linux"]);
+  assert.deepStrictEqual(plat.repos.map((r) => [r.full_name, r.platforms]), [["a/b", ["windows", "linux"]], ["c/d", ["linux"]]]);
+  console.log("async tests passed");
 })();
+
+// Curated platform filter drops entries with unknown or other platforms
+const mini = [
+  { n: "Win PDF", d: "pdf editor", c: "", a: [], p: ["windows"] },
+  { n: "Droid PDF", d: "pdf editor", c: "", a: [], p: ["android"] },
+  { n: "Any PDF", d: "pdf editor", c: "", a: [] },
+];
+const names = (pl) => core.searchIndex(P("editor pdf"), mini, 10, pl).map((e) => e.n).sort();
+assert.deepStrictEqual(names([]), ["Any PDF", "Droid PDF", "Win PDF"]);
+assert.deepStrictEqual(names(["windows", "linux"]), ["Win PDF"]);
+
+// Sorting works on curated (st/up) and GitHub (stargazers_count/pushed_at) shapes; missing values last
+assert.deepStrictEqual(core.sortItems([{ st: 5 }, {}, { st: 50 }], "stars"), [{ st: 50 }, { st: 5 }, {}]);
+assert.deepStrictEqual(core.sortItems([{ pushed_at: "2024-01-01" }, { pushed_at: "2026-01-01" }], "updated").map((r) => r.pushed_at), ["2026-01-01", "2024-01-01"]);
+assert.deepStrictEqual(core.sortItems([{ st: 1 }, { st: 9 }], "match"), [{ st: 1 }, { st: 9 }]);
+// Saved repos: categories, delete category, import merge
+const saved = {
+  "https://github.com/a/b": { name: "a/b", url: "https://github.com/a/b", cats: ["PDF", "Work"] },
+  "https://github.com/c/d": { name: "c/d", url: "https://github.com/c/d", cats: ["PDF"] },
+};
+assert.deepStrictEqual(core.savedCategories(saved), [{ name: "PDF", count: 2 }, { name: "Work", count: 1 }]);
+assert.deepStrictEqual(core.removeCategory(saved, "PDF")["https://github.com/c/d"].cats, []);
+assert.strictEqual(saved["https://github.com/c/d"].cats.length, 1, "removeCategory must not mutate");
+const merged = core.mergeSaved(saved, {
+  "https://github.com/a/b": { name: "a/b", url: "https://github.com/a/b", cats: ["Work", " Tools "] },
+  "https://github.com/e/f": { name: "e/f", url: "https://github.com/e/f", cats: [] },
+  junk: { url: 5 },
+});
+assert.deepStrictEqual(merged["https://github.com/a/b"].cats, ["PDF", "Work", "Tools"]);
+assert.ok(merged["https://github.com/e/f"] && !merged.junk);
+
+console.log("sync tests passed");
