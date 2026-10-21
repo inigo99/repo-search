@@ -30,11 +30,6 @@
   input[type=search]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
   button { padding: 0 22px; font: inherit; font-weight: 600; border: 0; border-radius: 999px;
     background: var(--accent); color: var(--accent-fg); cursor: pointer; }
-  .examples { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-  .examples a { font-size: 14px; color: var(--muted); border: 1px solid var(--line); padding: 4px 12px;
-    border-radius: 999px; text-decoration: none; }
-  .examples a:hover { color: var(--fg); border-color: var(--muted); }
-  body.searched .examples { display: none; }
   .controls { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; justify-content: center;
     margin-top: 16px; font-size: 14px; color: var(--muted); }
   body.searched .controls { justify-content: flex-start; margin-top: 12px; }
@@ -100,7 +95,7 @@
     <h1>repo<span>search</span></h1>
     <p class="sub">Free, open-source alternatives to any software — or tools and plugins by what they do.<br>Type in English or Spanish.</p>
     <form id="f" role="search">
-      <input id="q" type="search" placeholder="e.g. Adobe Acrobat, unir PDFs, VS Code plugin for markdown…" aria-label="Search" autofocus>
+      <input id="q" type="search" placeholder="Search software, tools or plugins…" aria-label="Search" autofocus>
       <button>Search</button>
     </form>
     <div class="controls">
@@ -122,13 +117,6 @@
           <option value="updated">Recently updated</option>
         </select>
       </label>
-    </div>
-    <div class="examples">
-      <a href="?q=Adobe+Acrobat">Adobe Acrobat</a>
-      <a href="?q=alternativa+a+Photoshop">alternativa a Photoshop</a>
-      <a href="?q=gestor+de+contraseñas+autoalojado">gestor de contraseñas autoalojado</a>
-      <a href="?q=plugin+de+obsidian+para+calendario">plugin de obsidian para calendario</a>
-      <a href="?q=convertir+video+a+gif">convertir video a gif</a>
     </div>
   </header>
   <div id="meta"></div>

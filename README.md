@@ -1,15 +1,19 @@
 # repo-search
 
-A "Google for repositories": find **free, open-source alternatives** to any program, or **tools and plugins by what they do**. Type in English or Spanish — Spanish is translated to English offline, no AI or API keys needed.
+**English** · [Español](README.es.md)
+
+A "Google for repositories": find **free, open-source alternatives** to any program, or **tools and plugins by what they do**. Type in English or Spanish: Spanish queries are translated to English offline, with no AI or API keys needed.
 
 **Live:** https://inigo99.github.io/repo-search/
 
 | You type | It searches |
 |---|---|
 | `Adobe Acrobat` | open-source alternatives to Adobe Acrobat (pdf editor) |
-| `alternativa gratuita a Photoshop` | alternatives to Photoshop (image editor) |
-| `plugin de obsidian para calendario` | `plugin obsidian calendar` |
-| `gestor de contraseñas autoalojado` | `password manager self-hosted` |
+| `free alternative to Photoshop` | alternatives to Photoshop (image editor) |
+| `obsidian calendar plugin` | `obsidian calendar plugin` |
+| `self-hosted password manager` | `self-hosted password manager` |
+
+The same searches written in Spanish return the same results.
 
 ## Features
 
@@ -79,9 +83,9 @@ $env:GITHUB_TOKEN = "github_pat_xxx"
 - **Web:** open the live site, or serve locally with `python3 -m http.server` and visit http://localhost:8000
 - **CLI (Node 18+):**
   ```bash
-  node cli.js "alternativa a Adobe Acrobat"
-  node cli.js "editor de vídeo" --platform windows,linux --sort stars --limit 5
-  node cli.js "notas" --platform android --json
+  node cli.js "alternative to Adobe Acrobat"
+  node cli.js "video editor" --platform windows,linux --sort stars --limit 5
+  node cli.js "notes" --platform android --json
   ```
 - **AI skill:** copy `skill/repo-search/` into your skills folder (e.g. `~/.claude/skills/`). The agent then runs the CLI and summarises the results.
 
