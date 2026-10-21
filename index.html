@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repo Search</title>
+<meta name="description" content="Find free, open-source GitHub alternatives to any software, or tools by what they do. Search in English or Spanish.">
+<style>
+  :root {
+    --bg: #fbfaf7; --fg: #1c1b19; --muted: #6b6861; --line: #e4e1da;
+    --card: #ffffff; --accent: #2f6f4f; --accent-fg: #ffffff; --tag: #eef3ef;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #131412; --fg: #ecebe6; --muted: #9c998f; --line: #2a2b28;
+      --card: #1b1c1a; --accent: #6fbf94; --accent-fg: #0d1a13; --tag: #1f2a23; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 0 16px 64px; }
+  header { padding: 14vh 0 28px; text-align: center; transition: padding .2s; }
+  body.searched header { padding: 28px 0 16px; }
+  h1 { margin: 0 0 6px; font-size: clamp(28px, 6vw, 44px); letter-spacing: -.02em; }
+  h1 span { color: var(--accent); }
+  .sub { margin: 0 0 24px; color: var(--muted); }
+  body.searched .sub { display: none; }
+  form { display: flex; gap: 8px; }
+  input[type=search] { flex: 1; min-width: 0; padding: 14px 18px; font: inherit; color: var(--fg);
+    background: var(--card); border: 1px solid var(--line); border-radius: 999px; outline: none; }
+  input[type=search]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+  button { padding: 0 22px; font: inherit; font-weight: 600; border: 0; border-radius: 999px;
+    background: var(--accent); color: var(--accent-fg); cursor: pointer; }
+  .examples { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .examples a { font-size: 14px; color: var(--muted); border: 1px solid var(--line); padding: 4px 12px;
+    border-radius: 999px; text-decoration: none; }
+  .examples a:hover { color: var(--fg); border-color: var(--muted); }
+  body.searched .examples { display: none; }
+  #meta { color: var(--muted); font-size: 14px; margin: 8px 4px 20px; }
+  #meta b { color: var(--fg); font-weight: 600; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 28px 4px 10px; }
+  .r { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+  .r a.t { color: var(--accent); font-weight: 600; text-decoration: none; font-size: 17px; word-break: break-word; }
+  .r a.t:hover { text-decoration: underline; }
+  .r p { margin: 4px 0 8px; }
+  .m { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 13px; color: var(--muted); }
+  .tag { background: var(--tag); color: var(--fg); padding: 1px 8px; border-radius: 6px; }
+  .note { color: var(--muted); padding: 4px; }
+  .err { color: #b4432f; }
+  details { margin-top: 48px; color: var(--muted); font-size: 14px; }
+  details input { width: 100%; margin-top: 8px; padding: 8px 12px; font: inherit; color: var(--fg);
+    background: var(--card); border: 1px solid var(--line); border-radius: 8px; }
+  footer { margin-top: 24px; font-size: 13px; color: var(--muted); text-align: center; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>repo<span>search</span></h1>
+    <p class="sub">Free, open-source alternatives to any software — or tools and plugins by what they do.<br>Type in English or Spanish.</p>
+    <form id="f" role="search">
+      <input id="q" type="search" placeholder="e.g. Adobe Acrobat, unir PDFs, VS Code plugin for markdown…" aria-label="Search" autofocus>
+      <button>Search</button>
+    </form>
+    <div class="examples">
+      <a href="?q=Adobe+Acrobat">Adobe Acrobat</a>
+      <a href="?q=alternativa+a+Photoshop">alternativa a Photoshop</a>
+      <a href="?q=gestor+de+contraseñas+autoalojado">gestor de contraseñas autoalojado</a>
+      <a href="?q=plugin+de+obsidian+para+calendario">plugin de obsidian para calendario</a>
+      <a href="?q=convertir+video+a+gif">convertir video a gif</a>
+    </div>
+  </header>
+  <div id="meta"></div>
+  <div id="out"></div>
+  <details>
+    <summary>GitHub token (optional)</summary>
+    Without a token GitHub allows about 10 searches per minute. A token with no scopes raises that limit.
+    It is stored only in this browser.
+    <input id="token" type="password" placeholder="ghp_…" autocomplete="off">
+  </details>
+  <footer>Curated data from <a href="https://github.com/RunaCapital/awesome-oss-alternatives">awesome-oss-alternatives</a>,
+    <a href="https://github.com/btw-so/open-source-alternatives">open-source-alternatives</a>,
+    <a href="https://github.com/flick9000/instead-of">instead-of</a> and
+    <a href="https://github.com/awesome-selfhosted/awesome-selfhosted">awesome-selfhosted</a>, plus the GitHub Search API.
+    · <a href="https://github.com/inigo99/repo-search">Source</a></footer>
+</main>
+<script src="core.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const safeUrl = (u) => /^https?:\/\//.test(u || "") ? u : "#";
+const store = { get(k) { try { return localStorage.getItem(k) || ""; } catch { return ""; } },
+                set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+
+$("token").value = store.get("gh_token");
+$("token").onchange = (e) => store.set("gh_token", e.target.value.trim());
+
+const data = Promise.all(["es-en", "apps", "index"].map((n) => fetch(`data/${n}.json`).then((r) => r.json())));
+
+function card(title, url, desc, meta) {
+  return `<div class="r"><a class="t" href="${esc(safeUrl(url))}" target="_blank" rel="noopener">${esc(title)}</a>
+    ${desc ? `<p>${esc(desc)}</p>` : ""}<div class="m">${meta.filter(Boolean).join("")}</div></div>`;
+}
+const tag = (s) => s ? `<span class="tag">${esc(s)}</span>` : "";
+const txt = (s) => s ? `<span>${esc(s)}</span>` : "";
+
+async function run(query) {
+  query = query.trim();
+  if (!query) return;
+  document.body.classList.add("searched");
+  $("q").value = query;
+  document.title = `${query} — Repo Search`;
+  $("out").innerHTML = `<p class="note">Searching…</p>`;
+  const [dict, apps, index] = await data;
+  const p = RepoSearch.parseQuery(query, dict, apps);
+  $("meta").innerHTML = p.app
+    ? `Open-source alternatives to <b>${esc(p.app)}</b> (${esc(p.func)})${p.terms.length ? ` · also: <b>${esc(p.terms.join(" "))}</b>` : ""}`
+    : `Searching for <b>${esc(p.terms.join(" ") || query)}</b>`;
+
+  const curated = RepoSearch.searchIndex(p, index, 12);
+  let html = "";
+  if (curated.length) {
+    html += `<h2>Curated alternatives</h2>` + curated.map((e) =>
+      card(e.n, e.r || e.u, e.d, [tag(e.c), e.a.length ? txt("replaces " + e.a.join(", ")) : "", e.r && e.u !== e.r ? `<a href="${esc(safeUrl(e.u))}" target="_blank" rel="noopener">website</a>` : ""])).join("");
+  }
+  html += `<h2>On GitHub</h2><div id="gh"><p class="note">Loading…</p></div>`;
+  $("out").innerHTML = html;
+
+  try {
+    const { repos } = await RepoSearch.searchGithub(p, { token: store.get("gh_token") });
+    const known = new Set(curated.map((e) => (e.r || "").toLowerCase()));
+    const list = repos.filter((r) => !known.has(r.html_url.toLowerCase()))
+      .sort((a, b) => b.stargazers_count - a.stargazers_count).slice(0, 30);
+    $("gh").innerHTML = list.length ? list.map((r) => card(r.full_name, r.html_url, r.description, [
+      txt("★ " + r.stargazers_count.toLocaleString("en")), txt(r.language), r.license ? txt(r.license.spdx_id) : "",
+      ...(r.topics || []).slice(0, 4).map(tag)])).join("")
+      : `<p class="note">No GitHub results. Try fewer or different words.</p>`;
+  } catch (e) {
+    $("gh").innerHTML = `<p class="note err">${esc(e.message)}</p>`;
+  }
+}
+
+$("f").onsubmit = (e) => {
+  e.preventDefault();
+  const q = $("q").value.trim();
+  if (!q) return;
+  history.pushState(null, "", "?q=" + encodeURIComponent(q));
+  run(q);
+};
+const fromUrl = () => { const q = new URLSearchParams(location.search).get("q"); if (q) run(q); };
+window.onpopstate = fromUrl;
+fromUrl();
+</script>
+</body>
+</html>
