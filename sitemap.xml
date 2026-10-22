@@ -2,97 +2,323 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://inigo99.github.io/repo-search/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/11/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/12ft-io/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/1password/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/activerecord/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/adobe/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/adobe-photoshop/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/adobe-premiere-pro/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/adobe-suite/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/after-effects/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/airdrop/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/airtable/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/alexa/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/alfred/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/algolia/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/amazon-neptune/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/amplitude/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/android/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/anki/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/apify/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/apollo/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/apple/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/apple-reachability/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/asana/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/auth0/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/aws-sagemaker/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/betterdisplay/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/bitly/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/bolt/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/buffer/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/c64/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/calendly/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/calibre/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/canva/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/capcut/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/captcha/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/ccleaner/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/celery/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/chargebee/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/chatgpt/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/chatgpt-atlas/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/chrome/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/claude/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/claude-code/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/claude-cowork/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/claude-managed-agents/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/claude-tag/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/clay/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/cleanmymac/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/cleanshot/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/clearbit/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/clerk/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/clickup/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/clockify/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/clojure/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/cloudinary/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/cluely/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/codepush/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/codex/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/confluence/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/contentful/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/convertkit/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/coolify/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/copilot/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/core-data/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/cron/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/css/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/cursor/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/dakboard/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/datadog/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/devin/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/dia/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/discord/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/disqus/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/docker/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/docusign/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/dots/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/dropbox/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/eas-update/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/ecwid/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/edge/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/elastic-cloud/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/elasticsearch/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/electron/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/elevenlabs/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/eventbrite/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/evernote/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/everything/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/figma/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/find/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/firebase/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/firebase-dynamic-links/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/firecrawl/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/fireflies/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/fivetran/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/flutter/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/framer/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/freepik/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/frp/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/gemini/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/github/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/github-copilot/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/gnu/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/go/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/google/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/google-analytics/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/google-chrome/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/google-drive/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/google-forms/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/google-keep/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/google-meet/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/google-notebooklm/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/google-photos/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/google-suite/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/google-vertex-ai/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/grammarly/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/granola/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/grep/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/greynoise/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/grok/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/grok-bot/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/heroku/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/higgsfield/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/hootsuite/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/https/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/hubspot/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/i3status/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/ilmerge/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/insomnia/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/intercom/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/jasper/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/java/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/javascript/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/jellyfin/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/jev/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/jira/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/json/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/jsx/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/jupyter-notebooks/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/kdb/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/keycloak/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/kubernetes/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/langchain/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/laragon/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/laravel/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/launchdarkly/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/linear/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/linktree/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/linux/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/listary/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/listview/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/litellm/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/little-snitch/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/lm-studio/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/looker/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/loom/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/lovable/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/ls/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/mac/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/magento/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/magento-2/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/mailchimp/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/mailgun/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/make/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/manus/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/manychat/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/medium/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/microsoft-office/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/microsoft-suite/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/midjourney/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/minecraft/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/mintlify/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/miro/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/mixpanel/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/monday/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/muse/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/n8n/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/netlify/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/newrelic/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/nextcloud/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/nexus/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/ngrok/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/nintendo/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/node-js/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/nordvpn/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/notebooklm/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/notion/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/noun-project/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/obsidian/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/odoo/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/office/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/okta/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/ollama/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/onenote/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/openai/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/openclaw/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/openvpn/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/opera/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/opus-clip/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/orms/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/otter/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/otter-ai/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/overleaf/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/pagerduty/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/papertrail/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/perplexity-comet/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/photoshop/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/php/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/plane/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/plausible/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/playwright/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/plex/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/pocket/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/postman/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/postmark/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/premiere/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/prometheus/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/proxifier/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/puppeteer/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/putty/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/python/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/quickbooks/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/rag/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/railway/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/raycast/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/react/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/react-native/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/redis/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/redux/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/reinforcement-learning/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/replit/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/resend/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/retell/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/retool/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/rm/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/roam-research/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/rust/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/safari/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/salesforce/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/screen-studio/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/segment/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/semrush/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/sendgrid/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/sentry/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/shopify/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/slack/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/snowflake/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/socket-io/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/splitwise/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/splunk/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/spotify/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/spotlight/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/sqlite/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/std/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/strikingly/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/stripe/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/submagic/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/substack/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/sudo/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/supabase/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/superwhisper/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/surfshark/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/swiftui/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/tableau/</loc></url>
-  <url><loc>https://inigo99.github.io/repo-search/alternatives/tableau-looker/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/tailscale/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/tavily/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/teachable/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/teams/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/teamviewer/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/temporal/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/termius/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/termux/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/terraform/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/thinkific/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/tigergraph/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/todoist/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/toggl/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/trello/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/twilio/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/twitter/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/typeform/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/typeless/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/uiactionsheet/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/uialertview/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/uiimagepickercontroller/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/uilabel/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/uipagecontrol/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/uisegmentedcontrol/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/uislider/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/uiswitch/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/uitabbarcontroller/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/uitableview/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/uitextview/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/unity/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/unix/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/uptime-kuma/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/using-evergreen/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/v0/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/vapi/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/vercel/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/vim/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/vscode/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/warp/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/watchtower/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/wayland/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/webflow/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/whmcs/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/windows/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/windows-10/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/windows-media-player/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/winscp/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/wireguard/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/wispr-flow/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/wisprflow/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/wix/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/woocommerce/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/wordpress/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/xampp/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/zapier/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/zendesk/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/zoom/</loc></url>
