@@ -34,6 +34,8 @@ Options:
   (use it when the user mentions a device or OS, e.g. "para Android", "on my Mac").
 - `--sort match|stars|updated` — default `match` (relevance weighted by stars and freshness).
 - `--live` — also search GitHub live even when the index has enough results.
+- `--license permissive|copyleft`, `--language <name>`, `--active` (updated in the last 2 years)
+  — use them when the user asks for a license, a programming language or maintained projects.
 
 Set `GITHUB_TOKEN` in the environment if GitHub rate limits (10 searches/min unauthenticated;
 each platform costs one extra search).

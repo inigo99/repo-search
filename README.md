@@ -18,8 +18,11 @@ The same searches written in Spanish return the same results.
 ## Features
 
 - **Platform filters:** Windows, macOS, Linux (desktop) and Android, iOS (mobile). Pick several to see results that run on any of them.
+- **More filters:** license (permissive or copyleft), programming language, and *active* (updated in the last 2 years).
 - **Sorting:** best match, most stars or recently updated.
-- **Saved tab:** save any result into one or more categories you create (e.g. *PDF tools*, *Work*). Saved repos live in your browser; use **Export / Import** to move them to another device.
+- **Saved tab:** save any result into one or more categories you create (e.g. *PDF tools*, *Work*). Saved repos live in your browser; **Sync with Gist** keeps them in a private GitHub Gist shared by all your devices, and **Export / Import** moves them as a file.
+- **Browse pages:** [one page per product](https://inigo99.github.io/repo-search/alternatives/) (*"open-source alternatives to Notion"*…), regenerated weekly and listed in `sitemap.xml` so search engines can find them.
+- **Spanish and synonyms:** ~700 Spanish words and phrases, plurals, and English synonyms (*image* ↔ *photo*, *notes* ↔ *note-taking*…).
 - **Fast and unlimited:** most searches never call the GitHub API, so the rate limit only matters for live searches.
 - **Shareable searches:** the URL keeps the query, platforms and sort (e.g. `?q=pdf+editor&p=windows,linux&sort=stars`).
 
@@ -78,6 +81,16 @@ export GITHUB_TOKEN=github_pat_xxx
 $env:GITHUB_TOKEN = "github_pat_xxx"
 ```
 
+### 4. Optional: sync saved repos between devices
+
+**Sync with Gist** (Saved tab) stores your saved repos in a private Gist of your account. The token then needs one permission:
+
+1. Edit the token (or create a new one) at **Settings → Developer settings → Fine-grained tokens**.
+2. Under **Account permissions**, set **Gists** to **Read and write**, and save.
+3. Add the same token on every device and press **Sync with Gist** once. From then on, every change is synced automatically.
+
+If you edit the same repo on two devices, the most recent change wins (removals included).
+
 ### Tips
 
 - Don't commit the token or paste it into sites you don't trust, even though it has no permissions.
@@ -93,6 +106,7 @@ $env:GITHUB_TOKEN = "github_pat_xxx"
   node cli.js "video editor" --platform windows,linux --sort stars --limit 5
   node cli.js "notes" --platform android --json
   node cli.js "pdf editor" --live          # also search GitHub live
+  node cli.js "password manager" --license copyleft --language Go --active
   ```
 - **AI skill:** copy `skill/repo-search/` into your skills folder (e.g. `~/.claude/skills/`). The agent then runs the CLI and summarises the results.
 
@@ -102,6 +116,7 @@ $env:GITHUB_TOKEN = "github_pat_xxx"
 GITHUB_TOKEN=github_pat_xxx python3 scripts/build_index.py   # rebuild the index (~20 min; without a token only the curated lists are refreshed)
 node test.js                                                 # offline tests: search core
 python3 scripts/test_build.py                                # offline tests: index builder
+node scripts/build_pages.js                                  # regenerate alternatives/ pages and sitemap.xml
 ```
 
 To improve results, add Spanish words to `data/es-en.json` or apps to `data/apps.json` (`"app name": "what it does"`).

@@ -5,11 +5,16 @@ on:
     - cron: "17 4 * * 1"   # Mondays 04:17 UTC
   push:
     branches: [main]
-    paths: [scripts/build_index.py]
+    paths: [scripts/**, data/apps.json, .github/workflows/update-index.yml]
   workflow_dispatch:
 
 permissions:
   contents: write
+
+# A newer run (e.g. after a push) replaces one still running.
+concurrency:
+  group: update-index
+  cancel-in-progress: true
 
 jobs:
   update:
@@ -28,11 +33,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: node test.js
+      - run: node scripts/build_pages.js
       - name: Commit if changed
         run: |
-          git diff --quiet data/ && exit 0
+          git add data/ alternatives/ sitemap.xml robots.txt
+          git diff --cached --quiet && exit 0
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/
-          git commit -m "Update index"
+          git commit -m "Update index and alternative pages"
+          git pull --rebase origin main
           git push

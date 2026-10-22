@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://inigo99.github.io/repo-search/sitemap.xml

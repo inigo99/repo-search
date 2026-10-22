@@ -85,6 +85,27 @@ assert.deepStrictEqual(core.searchIndex(P("alternativa a Notion"), idx, 10).map(
 // Hyphenated names and topics match single words
 assert.ok(core.searchIndex(P("pdf"), [{ n: "acme/pdf-tools", s: "gh" }, { n: "x", t: ["pdf-editor"], s: "gh" }], 5).length === 2);
 
+// Filters: license groups, language, active (unknown values fail an active filter)
+const F = core.passesFilters;
+assert.ok(F({ lic: "MIT" }, { license: "permissive" }) && !F({ lic: "GPL-3.0" }, { license: "permissive" }));
+assert.ok(F({ lic: "AGPL-3.0" }, { license: "copyleft" }) && F({ lic: "MPL-2.0" }, { license: "copyleft" }));
+assert.ok(!F({}, { license: "copyleft" }) && F({}, {}));
+assert.ok(F({ lang: "Rust" }, { language: "rust" }) && !F({ lang: "Go" }, { language: "Rust" }));
+assert.ok(F({ up: now }, { active: true }) && !F({ up: "2020-01-01" }, { active: true }) && !F({}, { active: true }));
+const fidx = [
+  { n: "a/mit-notes", d: "notes app", li: "MIT", l: "Rust", up: now },
+  { n: "a/gpl-notes", d: "notes app", li: "GPL-3.0", l: "Go", up: "2019-01-01" },
+];
+const fnames = (f) => core.searchIndex(P("notes"), fidx, 10, [], f).map((e) => e.n);
+assert.deepStrictEqual(fnames({ license: "copyleft" }), ["a/gpl-notes"]);
+assert.deepStrictEqual(fnames({ active: true, language: "rust" }), ["a/mit-notes"]);
+assert.deepStrictEqual(core.topLanguages([{ l: "Go" }, { l: "Rust" }, { l: "Go" }, {}], 1), ["Go"]);
+
+// Synonyms and plurals: "image editors" finds a "photo editing" tool
+assert.ok(core.variants("images").includes("photo") && core.variants("editors").includes("editing"));
+assert.strictEqual(core.searchIndex(P("image editors"), [{ n: "x/y", d: "Photo editing for everyone" }], 5).length, 1);
+assert.strictEqual(core.searchIndex(P("libraries"), [{ n: "x/y", d: "A small library" }], 5).length, 1);
+
 // Sorting works on curated (st/up) and GitHub (stargazers_count/pushed_at) shapes; missing values last
 assert.deepStrictEqual(core.sortItems([{ st: 5 }, {}, { st: 50 }], "stars"), [{ st: 50 }, { st: 5 }, {}]);
 assert.deepStrictEqual(core.sortItems([{ pushed_at: "2024-01-01" }, { pushed_at: "2026-01-01" }], "updated").map((r) => r.pushed_at), ["2026-01-01", "2024-01-01"]);
@@ -104,5 +125,16 @@ const merged = core.mergeSaved(saved, {
 });
 assert.deepStrictEqual(merged["https://github.com/a/b"].cats, ["PDF", "Work", "Tools"]);
 assert.ok(merged["https://github.com/e/f"] && !merged.junk);
+
+// Gist sync: newest change per repo wins, removals included; ties keep the item
+const A = { saved: { u1: { url: "u1", cats: ["a"], at: "2026-01-02" }, u2: { url: "u2", cats: [], at: "2026-01-01" } }, deleted: { u3: "2026-01-05" } };
+const B = { saved: { u1: { url: "u1", cats: ["b"], at: "2026-01-03" }, u3: { url: "u3", cats: [], at: "2026-01-04" } }, deleted: { u2: "2026-01-02" } };
+const M = core.syncMerge(A, B);
+assert.deepStrictEqual(M.saved.u1.cats, ["b"]);                  // edited later on B
+assert.ok(!M.saved.u2 && M.deleted.u2 === "2026-01-02");          // removed on B after A saved it
+assert.ok(!M.saved.u3 && M.deleted.u3 === "2026-01-05");          // removed on A after B saved it
+assert.deepStrictEqual(core.syncMerge(M, M), M);                  // idempotent
+assert.ok(core.syncMerge({ saved: { x: { url: "x", cats: [], at: "t" } } }, { deleted: { x: "t" } }).saved.x);
+assert.strictEqual(core.removeCategory(saved, "Work", "T")["https://github.com/a/b"].at, "T");
 
 console.log("sync tests passed");

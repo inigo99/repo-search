@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Repo Search</title>
 <meta name="description" content="Find free, open-source GitHub alternatives to any software, or tools by what they do. Search in English or Spanish.">
+<link rel="canonical" href="https://inigo99.github.io/repo-search/">
 <style>
   :root {
     --bg: #fbfaf7; --fg: #1c1b19; --muted: #6b6861; --line: #e4e1da;
@@ -89,6 +90,7 @@
   <nav class="tabs" aria-label="Views">
     <a href="#" id="tab-search">Search</a>
     <a href="#saved" id="tab-saved">Saved <span id="saved-count"></span></a>
+    <a href="alternatives/">Browse</a>
   </nav>
   <section id="search-view">
   <header>
@@ -117,6 +119,17 @@
           <option value="updated">Recently updated</option>
         </select>
       </label>
+      <label>License
+        <select id="license">
+          <option value="">Any</option>
+          <option value="permissive">Permissive (MIT, Apache, BSD…)</option>
+          <option value="copyleft">Copyleft (GPL, AGPL, MPL…)</option>
+        </select>
+      </label>
+      <label>Language
+        <select id="language"><option value="">Any</option></select>
+      </label>
+      <label class="chip"><input type="checkbox" id="active"><span>Active (updated in 2 years)</span></label>
     </div>
   </header>
   <div id="meta"></div>
@@ -128,12 +141,14 @@
       <div id="saved-cats" class="group" role="group" aria-label="Filter by category"></div>
       <span class="sp"></span>
       <button class="ghost" id="del-cat" hidden>Delete category</button>
+      <span class="note" id="sync-status" aria-live="polite"></span>
+      <button class="ghost" id="sync" title="Keep saved repos in a private GitHub Gist, shared by all your devices">Sync with Gist</button>
       <button class="ghost" id="export">Export</button>
       <button class="ghost" id="import-btn">Import</button>
       <input id="import" type="file" accept="application/json,.json" hidden>
     </div>
     <div id="saved-list"></div>
-    <p class="note">Saved in this browser only. Use Export / Import to move them to another device.</p>
+    <p class="note">Saved in this browser. To use them on other devices, press <b>Sync with Gist</b> (needs a token with Gist permission, see README) or use Export / Import.</p>
   </section>
   <details>
     <summary>GitHub token (optional)</summary>
@@ -179,13 +194,18 @@ $("token").onchange = (e) => store.set("gh_token", e.target.value.trim());
 
 const data = Promise.all(["es-en", "apps", "index"].map((n) => fetch(`data/${n}.json`).then((r) => r.json())));
 
-// ---------- saved repos (this browser only) ----------
-let saved = (() => { try { return JSON.parse(store.get("saved") || "{}") || {}; } catch { return {}; } })();
-function persist() {
-  if (!store.set("saved", JSON.stringify(saved))) alert("Could not save: browser storage is unavailable.");
+// ---------- saved repos (this browser, optionally synced to a private Gist) ----------
+const readJson = (k) => { try { return JSON.parse(store.get(k) || "{}") || {}; } catch { return {}; } };
+let saved = readJson("saved");
+let deleted = readJson("saved_deleted"); // url -> time removed, so removals sync too
+const nowIso = () => new Date().toISOString();
+function persist(fromSync = false) {
+  if (!store.set("saved", JSON.stringify(saved)) || !store.set("saved_deleted", JSON.stringify(deleted)))
+    alert("Could not save: browser storage is unavailable.");
   $("saved-count").textContent = Object.keys(saved).length || "";
+  if (!fromSync && store.get("gist_sync") === "1") scheduleSync();
 }
-persist();
+persist(true);
 
 // Items shown on screen, by url, so the save dialog knows what it is saving.
 const shown = new Map();
@@ -223,12 +243,18 @@ const githubCard = (r) => card({ name: r.full_name, url: r.html_url, desc: r.des
 // runs automatically only when the index finds little, or on demand.
 const FEW = 8;
 const platforms = () => [...document.querySelectorAll("input[name=platform]:checked")].map((i) => i.value);
+const filters = () => ({ license: $("license").value, language: $("language").value, active: $("active").checked });
+const liveItem = (r) => ({ lic: r.license?.spdx_id, lang: r.language, up: r.pushed_at });
 let last = null; // { query, key, p, found, live: null | { loading, repos, error } }
 
 function setUrl(q) {
   const u = new URLSearchParams({ q });
   if (platforms().length) u.set("p", platforms().join(","));
   if ($("sort").value !== "match") u.set("sort", $("sort").value);
+  const f = filters();
+  if (f.license) u.set("lic", f.license);
+  if (f.language) u.set("lang", f.language);
+  if (f.active) u.set("active", "1");
   history.pushState(null, "", "?" + u);
 }
 
@@ -246,7 +272,7 @@ function render() {
   const list = RepoSearch.sortItems(found, mode).slice(0, 30);
   let html = `<h2>Results</h2>`;
   html += list.length ? list.map(indexCard).join("")
-    : `<p class="note">Nothing in the index${pl.length ? " for that platform" : ""}.</p>`;
+    : `<p class="note">Nothing in the index${pl.length || Object.values(filters()).some(Boolean) ? " with these filters" : ""}.</p>`;
 
   html += `<h2>Live from GitHub</h2>`;
   if (!live) html += `<button class="ghost" id="live">Search GitHub live too</button>`;
@@ -254,7 +280,9 @@ function render() {
   else if (live.error) html += `<p class="note err">${esc(live.error)}</p>`;
   else {
     const known = new Set(list.map((e) => (e.r || "").toLowerCase()));
-    const extra = RepoSearch.sortItems(live.repos.filter((r) => !known.has(r.html_url.toLowerCase())), mode).slice(0, 30);
+    const f = filters();
+    const extra = RepoSearch.sortItems(live.repos.filter((r) => !known.has(r.html_url.toLowerCase())
+      && RepoSearch.passesFilters(liveItem(r), f)), mode).slice(0, 30);
     html += extra.length ? extra.map(githubCard).join("") : `<p class="note">No more results on GitHub. Try fewer or different words.</p>`;
   }
   $("out").innerHTML = html;
@@ -286,8 +314,16 @@ async function run(query) {
   if (id !== runId) return;
   const p = RepoSearch.parseQuery(query, dict, apps);
   const pl = platforms();
-  last = { query, key: `${query}|${pl}`, p, found: RepoSearch.searchIndex(p, index, 60, pl), live: null };
-  if (last.found.length < FEW) await searchLive(id);
+  last = { query, key: `${query}|${pl}`, p, index, found: [], live: null };
+  await refilter(id);
+}
+
+// Filters other than platforms don't change the live query: re-rank the index and
+// filter the live results already fetched.
+async function refilter(id = runId) {
+  if (!last) return;
+  last.found = RepoSearch.searchIndex(last.p, last.index, 60, platforms(), filters());
+  if (last.found.length < FEW && !last.live) await searchLive(id);
   else render();
 }
 
@@ -303,6 +339,7 @@ document.querySelectorAll("input[name=platform]").forEach((i) => i.onchange = ()
   if (last) { setUrl(last.query); run(last.query); }
 });
 $("sort").onchange = () => { if (last) { setUrl(last.query); render(); } };
+["license", "language", "active"].forEach((id) => $(id).onchange = () => { if (last) { setUrl(last.query); refilter(); } });
 
 // ---------- save dialog ----------
 let editing = null;
@@ -344,9 +381,11 @@ $("dlg").onclose = () => {
     const pending = $("dlg-new").value.trim(); // typed but not added: keep it
     const cats = [...new Set([...checkedCats(), ...(pending ? [pending] : [])])];
     saved[url] = { name: editing.name, url, desc: editing.desc || "", stars: editing.stars ?? null,
-                   cats, added: saved[url]?.added || new Date().toISOString().slice(0, 10) };
+                   cats, added: saved[url]?.added || nowIso().slice(0, 10), at: nowIso() };
+    delete deleted[url];
   } else if (action === "remove") {
     delete saved[url];
+    deleted[url] = nowIso();
   } else return;
   editing = null;
   persist();
@@ -402,7 +441,12 @@ $("import").onchange = async (e) => {
     const incoming = JSON.parse(await file.text());
     if (!incoming || typeof incoming !== "object" || Array.isArray(incoming)) throw new Error();
     const before = Object.keys(saved).length;
-    saved = RepoSearch.mergeSaved(saved, incoming);
+    const prev = JSON.stringify(saved);
+    const merged = RepoSearch.mergeSaved(saved, incoming);
+    const old = JSON.parse(prev);
+    for (const [url, item] of Object.entries(merged))
+      if (JSON.stringify(item.cats) !== JSON.stringify(old[url]?.cats)) { item.at = nowIso(); delete deleted[url]; }
+    saved = merged;
     persist();
     renderSaved();
     alert(`Imported. ${Object.keys(saved).length - before} new repositories.`);
@@ -410,6 +454,75 @@ $("import").onchange = async (e) => {
     alert("That file is not a repo-search export.");
   }
 };
+
+// ---------- Gist sync ----------
+// Saved repos are stored in one private Gist of the token's owner. Needs a token with the
+// "Gists: Read and write" account permission (see README).
+const GIST_FILE = "repo-search-saved.json";
+const GIST_DESC = "repo-search saved repositories (https://inigo99.github.io/repo-search/)";
+async function gh(path, opts = {}) {
+  const token = store.get("gh_token");
+  if (!token) throw new Error("Add a GitHub token first (bottom of the page).");
+  const res = await fetch("https://api.github.com" + path, { ...opts, headers: {
+    Accept: "application/vnd.github+json", Authorization: `Bearer ${token}`,
+    ...(opts.body ? { "Content-Type": "application/json" } : {}) } });
+  if ([401, 403, 404].includes(res.status))
+    throw new Error("The token can't use Gists: give it the \"Gists: Read and write\" permission (see README).");
+  if (!res.ok) throw new Error(`GitHub error ${res.status}`);
+  return res.json();
+}
+async function findGist() {
+  const id = store.get("gist_id");
+  if (id) {
+    try { return await gh(`/gists/${id}`); } catch { store.set("gist_id", ""); } // deleted: look it up again
+  }
+  for (let page = 1; page <= 5; page++) {
+    const list = await gh(`/gists?per_page=100&page=${page}`);
+    const hit = list.find((g) => g.description === GIST_DESC && g.files[GIST_FILE]);
+    if (hit) return gh(`/gists/${hit.id}`);
+    if (list.length < 100) break;
+  }
+  return null;
+}
+let syncing = null, syncTimer = null;
+function scheduleSync() { clearTimeout(syncTimer); syncTimer = setTimeout(() => syncNow(true), 2000); }
+async function syncNow(quiet = false) {
+  if (syncing) return syncing;
+  $("sync-status").textContent = "Syncing…";
+  syncing = (async () => {
+    try {
+      const gist = await findGist();
+      let remote = { saved: {}, deleted: {} };
+      if (gist) {
+        const f = gist.files[GIST_FILE];
+        const text = f.truncated ? await (await fetch(f.raw_url)).text() : f.content;
+        try { remote = JSON.parse(text); } catch { /* corrupt file: overwrite with local */ }
+      }
+      const merged = RepoSearch.syncMerge({ saved, deleted }, remote);
+      saved = merged.saved; deleted = merged.deleted;
+      persist(true);
+      renderSaved();
+      render();
+      const body = JSON.stringify({ description: GIST_DESC, files: { [GIST_FILE]: { content: JSON.stringify(merged, null, 1) } } });
+      if (!gist) store.set("gist_id", (await gh("/gists", { method: "POST", body: JSON.stringify({ ...JSON.parse(body), public: false }) })).id);
+      else {
+        store.set("gist_id", gist.id);
+        if (JSON.stringify(remote) !== JSON.stringify(merged)) await gh(`/gists/${gist.id}`, { method: "PATCH", body });
+      }
+      store.set("gist_sync", "1");
+      $("sync-status").textContent = `Synced ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    } catch (e) {
+      $("sync-status").textContent = quiet ? "Sync failed" : "";
+      if (!quiet) alert(e.message);
+      $("sync-status").title = e.message;
+    } finally {
+      syncing = null;
+    }
+  })();
+  return syncing;
+}
+$("sync").onclick = () => syncNow(false);
+if (store.get("gist_sync") === "1") syncNow(true);
 
 // ---------- views & URL ----------
 function show(view) {
@@ -427,10 +540,25 @@ function fromUrl() {
   const pl = (u.get("p") || "").split(",");
   document.querySelectorAll("input[name=platform]").forEach((i) => i.checked = pl.includes(i.value));
   $("sort").value = ["stars", "updated"].includes(u.get("sort")) ? u.get("sort") : "match";
+  $("license").value = ["permissive", "copyleft"].includes(u.get("lic")) ? u.get("lic") : "";
+  $("active").checked = u.get("active") === "1";
+  setLanguage(u.get("lang") || "");
   show(location.hash === "#saved" ? "saved" : "search");
   const q = u.get("q");
   if (q && `${q}|${platforms()}` !== last?.key) run(q);
+  else refilter();
 }
+// Language options come from the index; an unknown language from a URL is kept as an option.
+function setLanguage(lang) {
+  if (lang && ![...$("language").options].some((o) => o.value === lang)) $("language").add(new Option(lang, lang));
+  $("language").value = lang;
+}
+data.then(([, , index]) => {
+  const current = $("language").value;
+  for (const l of RepoSearch.topLanguages(index, 25)) if (l !== current) $("language").add(new Option(l, l));
+  [...$("language").options].slice(1).sort((a, b) => a.value.localeCompare(b.value)).forEach((o) => $("language").add(o));
+  $("language").value = current;
+});
 window.onpopstate = fromUrl;
 window.onhashchange = fromUrl;
 fromUrl();

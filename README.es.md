@@ -16,8 +16,11 @@ Un "Google de repositorios": encuentra **alternativas gratuitas y de código abi
 ## Funciones
 
 - **Filtros por plataforma:** Windows, macOS y Linux (escritorio); Android e iOS (móvil). Puedes marcar varias y verás los resultados que funcionan en cualquiera de ellas.
+- **Más filtros:** licencia (permisiva o copyleft), lenguaje de programación y *activos* (actualizados en los últimos 2 años).
 - **Ordenar:** por coincidencia, por estrellas o por actualización más reciente.
-- **Pestaña Saved:** guarda cualquier resultado en una o varias categorías que tú creas (p. ej. *Herramientas PDF*, *Trabajo*). Se guardan en tu navegador; usa **Export / Import** para pasarlos a otro dispositivo.
+- **Pestaña Saved:** guarda cualquier resultado en una o varias categorías que tú creas (p. ej. *Herramientas PDF*, *Trabajo*). Se guardan en tu navegador; **Sync with Gist** los guarda en un Gist privado de GitHub compartido por todos tus dispositivos, y **Export / Import** los pasa como archivo.
+- **Páginas por producto:** [una página por programa](https://inigo99.github.io/repo-search/alternatives/) (*"open-source alternatives to Notion"*…), regeneradas cada semana e incluidas en `sitemap.xml` para que los buscadores las encuentren.
+- **Español y sinónimos:** unas 700 palabras y expresiones en español, plurales y sinónimos en inglés (*image* ↔ *photo*, *notes* ↔ *note-taking*…).
 - **Rápido y sin límite:** la mayoría de búsquedas no llaman a la API de GitHub; el límite solo afecta a las búsquedas en vivo.
 - **Búsquedas para compartir:** la URL guarda la búsqueda, las plataformas y el orden (p. ej. `?q=editor+pdf&p=windows,linux&sort=stars`).
 
@@ -76,6 +79,16 @@ export GITHUB_TOKEN=github_pat_xxx
 $env:GITHUB_TOKEN = "github_pat_xxx"
 ```
 
+### 4. Opcional: sincronizar los guardados entre dispositivos
+
+**Sync with Gist** (pestaña Saved) guarda tus repos en un Gist privado de tu cuenta. Para eso el token necesita un permiso:
+
+1. Edita el token (o crea uno nuevo) en **Settings → Developer settings → Fine-grained tokens**.
+2. En **Account permissions**, pon **Gists** en **Read and write** y guarda.
+3. Añade el mismo token en cada dispositivo y pulsa **Sync with Gist** una vez. A partir de ahí, cada cambio se sincroniza solo.
+
+Si cambias el mismo repo en dos dispositivos, gana el cambio más reciente (también al eliminarlo).
+
 ### Consejos
 
 - No subas el token a ningún repositorio ni lo pegues en webs de las que no te fíes, aunque no tenga permisos.
@@ -91,6 +104,7 @@ $env:GITHUB_TOKEN = "github_pat_xxx"
   node cli.js "editor de vídeo" --platform windows,linux --sort stars --limit 5
   node cli.js "notas" --platform android --json
   node cli.js "editor pdf" --live          # busca también en GitHub en vivo
+  node cli.js "gestor de contraseñas" --license copyleft --language Go --active
   ```
 - **Skill de IA:** copia `skill/repo-search/` en tu carpeta de skills (p. ej. `~/.claude/skills/`). El agente ejecuta la CLI y resume los resultados.
 
@@ -100,6 +114,7 @@ $env:GITHUB_TOKEN = "github_pat_xxx"
 GITHUB_TOKEN=github_pat_xxx python3 scripts/build_index.py   # regenera el índice (~20 min; sin token solo actualiza las listas curadas)
 node test.js                                                 # tests sin conexión: buscador
 python3 scripts/test_build.py                                # tests sin conexión: generador del índice
+node scripts/build_pages.js                                  # regenera las páginas de alternatives/ y sitemap.xml
 ```
 
 Para mejorar los resultados, añade palabras en español a `data/es-en.json` o programas a `data/apps.json` (`"nombre del programa": "what it does"`).

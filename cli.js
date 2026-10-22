@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Usage: node cli.js "alternativa a adobe acrobat" [--json] [--limit 10]
 //        [--platform windows,linux] [--sort match|stars|updated] [--live]
+//        [--license permissive|copyleft] [--language Rust] [--active]
 // Searches the prebuilt index; also searches GitHub live when the index finds
 // fewer than `limit` results, or always with --live.
 // Optional: GITHUB_TOKEN env var for higher rate limits.
@@ -22,20 +23,22 @@ async function main() {
   const args = process.argv.slice(2);
   const json = args.includes("--json");
   const opt = (name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
-  const valued = new Set(["--limit", "--platform", "--sort"].map((n) => args.indexOf(n) + 1).filter(Boolean));
+  const valued = new Set(["--limit", "--platform", "--sort", "--license", "--language"].map((n) => args.indexOf(n) + 1).filter(Boolean));
+  const filters = { license: opt("--license") || "", language: opt("--language") || "", active: args.includes("--active") };
   const limit = Number(opt("--limit") || 10);
   const sort = opt("--sort") || "match";
   const platforms = (opt("--platform") || "").toLowerCase().split(",").filter(Boolean);
   const query = args.filter((a, i) => !a.startsWith("--") && !valued.has(i)).join(" ");
   const bad = platforms.filter((p) => !core.PLATFORMS.includes(p));
-  if (!query || bad.length || !["match", "stars", "updated"].includes(sort)) {
+  if (!query || bad.length || !["match", "stars", "updated"].includes(sort) || !["", "permissive", "copyleft"].includes(filters.license)) {
     console.error('Usage: node cli.js "<query in English or Spanish>" [--json] [--limit N]\n' +
-      `       [--platform ${core.PLATFORMS.join(",")}] [--sort match|stars|updated] [--live]`);
+      `       [--platform ${core.PLATFORMS.join(",")}] [--sort match|stars|updated] [--live]\n` +
+      "       [--license permissive|copyleft] [--language <name>] [--active]");
     process.exit(1);
   }
   const [dict, apps, index] = await Promise.all(["es-en.json", "apps.json", "index.json"].map(load));
   const p = core.parseQuery(query, dict, apps);
-  const results = core.sortItems(core.searchIndex(p, index, Math.max(limit, 30), platforms), sort).slice(0, limit);
+  const results = core.sortItems(core.searchIndex(p, index, Math.max(limit, 30), platforms, filters), sort).slice(0, limit);
   let github = { repos: [], queries: [] }, error = null;
   if (args.includes("--live") || results.length < limit) {
     try {
@@ -45,7 +48,8 @@ async function main() {
     }
   }
   const known = new Set(results.map((e) => (e.r || "").toLowerCase()));
-  const repos = core.sortItems(github.repos.filter((r) => !known.has(r.html_url.toLowerCase())), sort).slice(0, limit).map((r) => ({
+  const repos = core.sortItems(github.repos.filter((r) => !known.has(r.html_url.toLowerCase())
+    && core.passesFilters({ lic: r.license?.spdx_id, lang: r.language, up: r.pushed_at }, filters)), sort).slice(0, limit).map((r) => ({
     name: r.full_name, url: r.html_url, stars: r.stargazers_count,
     language: r.language, description: r.description, topics: r.topics,
     updated: r.pushed_at, platforms: r.platforms,

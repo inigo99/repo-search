@@ -74,24 +74,65 @@
     return stars * fresh * (e.k ? 0.35 : 1);                    // awesome-lists sink
   }
 
+  // English synonyms: a query word also matches the other words of its group.
+  const SYNONYMS = [
+    ["editor", "editing"], ["photo", "image", "picture"], ["note", "note-taking", "notetaking", "notebook"],
+    ["chat", "messaging", "messenger"], ["mail", "email", "e-mail"], ["todo", "to-do", "task"],
+    ["drawing", "sketching", "painting", "paint"], ["diagram", "flowchart"], ["spreadsheet", "sheet"],
+    ["presentation", "slides", "slideshow"], ["download", "downloader"], ["converter", "convert", "conversion"],
+    ["recorder", "recording"], ["screenshot", "screen-capture", "screencapture"],
+    ["self-hosted", "selfhosted", "self-hostable"], ["analytics", "statistics", "stats"],
+    ["manager", "management"], ["reader", "viewer"], ["ebook", "e-book", "epub"], ["game", "gaming"],
+    ["wiki", "knowledge-base"], ["bookmark", "bookmarking"], ["translate", "translation", "translator"],
+    ["transcription", "speech-to-text", "stt"], ["music", "songs"], ["streaming", "stream"],
+  ];
+  const SYN = new Map(SYNONYMS.flatMap((g) => g.map((w) => [w, g])));
+  const singular = (w) => w.length > 3 && w.endsWith("ies") ? w.slice(0, -3) + "y"
+    : w.length > 3 && w.endsWith("s") && !w.endsWith("ss") ? w.slice(0, -1) : w;
+  // Every form of a query word that counts as a match.
+  const variants = (w) => { const s = singular(w); return [...new Set([w, s, ...(SYN.get(w) || SYN.get(s) || [])])]; };
+
+  // Filters shared by index entries and live GitHub results.
+  // item: { lic: SPDX id, lang, up: ISO date }; f: { license: ""|"permissive"|"copyleft", language, active }
+  const PERMISSIVE = /^(MIT|MIT-0|Apache-2\.0|BSD-[23]-Clause|0BSD|ISC|Unlicense|Zlib|BSL-1\.0|CC0-1\.0|WTFPL|PostgreSQL|Artistic-2\.0|NCSA|UPL-1\.0)$/i;
+  const COPYLEFT = /^(A?GPL|LGPL|MPL|EPL|EUPL|CDDL|OSL|CECILL)/i;
+  const ACTIVE_DAYS = 730;
+  function passesFilters(item, f = {}, now = Date.now()) {
+    if (f.license === "permissive" && !PERMISSIVE.test(item.lic || "")) return false;
+    if (f.license === "copyleft" && !COPYLEFT.test(item.lic || "")) return false;
+    if (f.language && (item.lang || "").toLowerCase() !== f.language.toLowerCase()) return false;
+    if (f.active && !(item.up && now - Date.parse(item.up) < ACTIVE_DAYS * DAY)) return false;
+    return true;
+  }
+
+  // Most common languages in the index, for the language filter.
+  function topLanguages(index, n = 20) {
+    const count = {};
+    for (const e of index) if (e.l) count[e.l] = (count[e.l] || 0) + 1;
+    return Object.keys(count).sort((a, b) => count[b] - count[a]).slice(0, n).sort((a, b) => a.localeCompare(b));
+  }
+
   // Rank entries of data/index.json. `platforms`: keep entries known to run on at
-  // least one of them (entries with unknown platforms are dropped).
-  function searchIndex(p, index, limit = 30, platforms = []) {
+  // least one of them (entries with unknown platforms are dropped). `filters`: see passesFilters.
+  function searchIndex(p, index, limit = 30, platforms = [], filters = {}) {
     const { rows, targets } = prepare(index);
     const words = [...new Set([...p.terms, ...(p.func ? p.func.split(" ") : [])])].filter((w) => w.length > 1);
+    const forms = words.map(variants);
     const need = Math.max(1, Math.ceil(words.length * 0.6));
     // "alternativa a Moodle", or just "Notion": any product some repo says it replaces.
     const typed = p.terms.join(" ");
     const target = p.app || (p.alt || targets.has(typed) ? typed : null);
+    const now = Date.now();
     const scored = [];
     index.forEach((e, i) => {
       if (platforms.length && !(e.p || []).some((x) => platforms.includes(x))) return;
+      if (!passesFilters({ lic: e.li, lang: e.l, up: e.up }, filters, now)) return;
       const r = rows[i];
       let score = 0, matched = 0;
       if (target && r.alts.some((x) => hasWords(x, target) || hasWords(target, x))) score += 10;
-      for (const w of words) {
-        const s = (hasWords(r.name, w) ? 3 : 0) + (hasWords(r.topics, w) ? 2 : 0)
-          + (hasWords(r.cat, w) ? 2 : 0) + (hasWords(r.desc, w) ? 1 : 0);
+      for (const ws of forms) {
+        const any = (field) => ws.some((w) => hasWords(field, w));
+        const s = (any(r.name) ? 3 : 0) + (any(r.topics) ? 2 : 0) + (any(r.cat) ? 2 : 0) + (any(r.desc) ? 1 : 0);
         if (s) { score += s; matched++; }
       }
       if (score >= 10 || (matched >= need && score > 0)) scored.push({ ...e, score: score * quality(e) });
@@ -173,9 +214,27 @@
     for (const s of Object.values(saved)) for (const c of s.cats) count[c] = (count[c] || 0) + 1;
     return Object.keys(count).sort((a, b) => a.localeCompare(b)).map((name) => ({ name, count: count[name] }));
   }
-  function removeCategory(saved, cat) {
+  function removeCategory(saved, cat, at = new Date().toISOString()) {
     const out = {};
-    for (const [k, s] of Object.entries(saved)) out[k] = { ...s, cats: s.cats.filter((c) => c !== cat) };
+    for (const [k, s] of Object.entries(saved))
+      out[k] = s.cats.includes(cat) ? { ...s, cats: s.cats.filter((c) => c !== cat), at } : s;
+    return out;
+  }
+  // Sync between devices: per repo, the most recent change wins, whether it was a save/edit
+  // (item.at) or a removal (deleted[url] = time). Each side: { saved: {url: item}, deleted: {url: ISO} }.
+  function syncMerge(a, b) {
+    const out = { saved: {}, deleted: {} };
+    const urls = new Set([a, b].flatMap((x) => [...Object.keys(x.saved || {}), ...Object.keys(x.deleted || {})]));
+    for (const url of urls) {
+      let best = null; // [time, item | null]
+      for (const x of [a, b]) {
+        const item = x.saved?.[url], del = x.deleted?.[url];
+        if (item && (!best || (item.at || "") > best[0] || ((item.at || "") === best[0] && !best[1]))) best = [item.at || "", item];
+        if (del && (!best || del > best[0])) best = [del, null];
+      }
+      if (best[1]) out.saved[url] = best[1];
+      else out.deleted[url] = best[0];
+    }
     return out;
   }
   // Import: union of repos and of their categories; existing data wins otherwise.
@@ -190,7 +249,8 @@
   }
 
   const api = { norm, parseQuery, searchIndex, githubQueries, searchGithub, sortItems, PLATFORMS,
-    savedCategories, removeCategory, mergeSaved };
+    passesFilters, topLanguages, variants,
+    savedCategories, removeCategory, mergeSaved, syncMerge };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.RepoSearch = api;
 })(this);
