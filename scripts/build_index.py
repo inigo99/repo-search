@@ -2,7 +2,8 @@
 """Build data/index.json: curated alternative lists + repos discovered on GitHub.
 
 Usage: GITHUB_TOKEN=... python scripts/build_index.py
-Stdlib only. Run weekly by .github/workflows/update-index.yml (about 20 minutes).
+Stdlib only. Run weekly by .github/workflows/update-index.yml. Stops within INDEX_BUDGET_MIN
+(default 65) minutes and saves what it has; repos it didn't reach are checked next run.
 
 With GITHUB_TOKEN set:
 - discovers repos by topic (self-hosted, alternative...) and description ("alternative to"),
@@ -245,8 +246,24 @@ def extract_alternatives(desc, topics=()):
 
 
 # ---------- GitHub access ----------
+# Time budget: the workflow is killed at 90 minutes and nothing is saved then, so the build
+# stops discovering/enriching in time and writes what it has. Later runs continue from the cache.
+START = time.monotonic()
+BUDGET = float(os.environ.get("INDEX_BUDGET_MIN", "65")) * 60
+DISCOVERY_SHARE = 0.5  # at most half of the budget for search, the rest for GraphQL
+
+
+def time_left():
+    return BUDGET - (time.monotonic() - START)
+
+
+class OutOfTime(Exception):
+    pass
+
+
 def http_json(url, token, body=None, tries=4):
-    """GET (or POST body) JSON from the GitHub API, waiting out rate limits."""
+    """GET (or POST body) JSON from the GitHub API. Short retries for server errors,
+    waits for rate limits only while the time budget allows."""
     headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json",
                "User-Agent": "repo-search-index"}
     data = None
@@ -254,15 +271,26 @@ def http_json(url, token, body=None, tries=4):
         data, headers["Content-Type"] = json.dumps(body).encode(), "application/json"
     for attempt in range(tries):
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, data=data, headers=headers), timeout=90) as r:
+            with urllib.request.urlopen(urllib.request.Request(url, data=data, headers=headers), timeout=60) as r:
                 return json.load(r)
         except urllib.error.HTTPError as e:
-            if e.code in (403, 429, 502, 503) and attempt < tries - 1:
-                wait = int(e.headers.get("Retry-After") or 0) or 60 * (attempt + 1)
-                print(f"  {e.code}, waiting {wait}s")
-                time.sleep(wait)
-                continue
-            raise
+            if attempt == tries - 1 or e.code not in (403, 429, 500, 502, 503, 504):
+                raise
+            if e.code in (403, 429):
+                reset = int(e.headers.get("X-RateLimit-Reset") or 0)
+                wait = int(e.headers.get("Retry-After") or 0) or (reset - int(time.time()) + 1 if reset else 0) or 30
+                wait = min(max(wait, 1), 120)
+            else:
+                wait = 5 * 2 ** attempt
+            if wait > time_left():
+                raise OutOfTime(f"no time left to wait {wait}s after HTTP {e.code}")
+            print(f"  HTTP {e.code}, retrying in {wait}s")
+            time.sleep(wait)
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            if attempt == tries - 1:
+                raise
+            print(f"  {e}, retrying")
+            time.sleep(5 * 2 ** attempt)
     return {}
 
 
@@ -286,7 +314,7 @@ def rest_search(q, token, pages=10, per_page=100):
                + urllib.parse.quote(q + " fork:false archived:false"))
         try:
             items = http_json(url, token).get("items", [])
-        except Exception as e:  # one bad query must not kill the build
+        except Exception as e:  # one bad query must not kill the build (OutOfTime included)
             print(f"  search failed ({q}): {e}")
             break
         out += items
@@ -298,11 +326,15 @@ def rest_search(q, token, pages=10, per_page=100):
 
 def discover(token, apps):
     """{repo_url_lower: REST item} for every repo matching the discovery queries."""
-    queries = [(f"{q} {band}", 10) for q in DISCOVERY_QUERIES for band in STAR_BANDS]
-    # Per known proprietary app: "<app> alternative", top 100 only.
-    queries += [(f'"{app}" alternative stars:>={MIN_STARS}', 1) for app in sorted(apps) if not app.startswith("_")]
+    # Most targeted first, so a tight time budget only drops the long tail:
+    # "<app> alternative" for known apps (top 100 each), then each topic/phrase by star band.
+    queries = [(f'"{app}" alternative stars:>={MIN_STARS}', 1) for app in sorted(apps) if not app.startswith("_")]
+    queries += [(f"{q} {band}", 10) for band in STAR_BANDS for q in DISCOVERY_QUERIES]
     repos = {}
     for i, (q, pages) in enumerate(queries):
+        if time_left() < BUDGET * (1 - DISCOVERY_SHARE):
+            print(f"discovery time budget used: skipping the last {len(queries) - i} queries")
+            break
         got = rest_search(q, token, pages=pages)
         for it in got:
             if not it.get("archived") and it["stargazers_count"] >= MIN_STARS:
@@ -327,36 +359,57 @@ GQL_REPO = """r%d: repository(owner: %s, name: %s) {
 }"""
 
 
-def graphql_repos(urls, token, batch=100):
-    """Full info + latest release asset names for each repo URL. Stops early near the rate limit."""
+def parse_repo(d):
+    rel = (d["releases"]["nodes"] or [{}])[0]
+    return {
+        "st": d["stargazerCount"], "up": (d["pushedAt"] or "")[:10], "desc": d["description"] or "",
+        "topics": [n["topic"]["name"] for n in d["repositoryTopics"]["nodes"]],
+        "l": (d["primaryLanguage"] or {}).get("name"),
+        "li": ((d["licenseInfo"] or {}).get("spdxId") or "").replace("NOASSERTION", ""),
+        "archived": d["isArchived"], "name": d["nameWithOwner"],
+        "assets": [a["name"] for a in (rel.get("releaseAssets") or {}).get("nodes", [])],
+    }
+
+
+def graphql_repos(urls, token, batch=50):
+    """Full info + latest release asset names for each repo URL. A failing batch is split
+    in halves (big queries time out on GitHub's side); stops near the rate or time limit."""
     info = {}
-    for i in range(0, len(urls), batch):
-        chunk = urls[i:i + batch]
+    left = [9999]
+
+    def fetch(chunk):
         parts = [GQL_REPO % (j, json.dumps(u.split("/")[3]), json.dumps(u.split("/")[4])) for j, u in enumerate(chunk)]
         query = "{ rateLimit { remaining }\n" + "\n".join(parts) + "}"
         try:
-            data = http_json("https://api.github.com/graphql", token, {"query": query}).get("data") or {}
+            data = http_json("https://api.github.com/graphql", token, {"query": query}, tries=2).get("data") or {}
+        except OutOfTime:
+            raise
         except Exception as e:
-            print(f"  graphql batch {i}: {e}")
-            continue
+            if len(chunk) > 1:
+                half = len(chunk) // 2
+                fetch(chunk[:half])
+                fetch(chunk[half:])
+            else:
+                print(f"  graphql skipped {len(chunk)} repos: {e}")
+            return
         for j, u in enumerate(chunk):
-            d = data.get(f"r{j}")
-            if not d:  # renamed, deleted or private
-                continue
-            rel = (d["releases"]["nodes"] or [{}])[0]
-            info[u] = {
-                "st": d["stargazerCount"], "up": (d["pushedAt"] or "")[:10], "desc": d["description"] or "",
-                "topics": [n["topic"]["name"] for n in d["repositoryTopics"]["nodes"]],
-                "l": (d["primaryLanguage"] or {}).get("name"),
-                "li": ((d["licenseInfo"] or {}).get("spdxId") or "").replace("NOASSERTION", ""),
-                "archived": d["isArchived"], "name": d["nameWithOwner"],
-                "assets": [a["name"] for a in (rel.get("releaseAssets") or {}).get("nodes", [])],
-            }
-        left = (data.get("rateLimit") or {}).get("remaining", 9999)
-        print(f"  graphql {min(i + batch, len(urls))}/{len(urls)} (rate limit left {left})")
-        if left < 50:
-            print("  stopping GraphQL early: rate limit almost used up")
+            if data.get(f"r{j}"):  # missing: renamed, deleted or private
+                info[u] = parse_repo(data[f"r{j}"])
+        left[0] = (data.get("rateLimit") or {}).get("remaining", left[0])
+
+    for i in range(0, len(urls), batch):
+        if time_left() < 120 or left[0] < 50:
+            print(f"  stopping GraphQL at {i}/{len(urls)}: "
+                  + ("time budget used" if time_left() < 120 else "rate limit almost used up")
+                  + " (the rest is checked on the next run)")
             break
+        try:
+            fetch(urls[i:i + batch])
+        except OutOfTime as e:
+            print(f"  stopping GraphQL: {e}")
+            break
+        if (i // batch) % 10 == 0:
+            print(f"  graphql {min(i + batch, len(urls))}/{len(urls)} (rate limit left {left[0]}, {int(time_left() // 60)} min left)")
     return info
 
 
@@ -404,7 +457,14 @@ def finalize(e, x, release_platforms):
     return e
 
 
-def build(curated, discovered, token, cache):
+def carry_over(e, p):
+    """Copy GitHub-derived fields of the previous index entry p into curated entry e."""
+    e.update({k: p[k] for k in ("st", "up", "l", "li", "t", "k") if k in p})
+    e["a"] = list(dict.fromkeys(e["a"] + p.get("a", [])))
+    return p.get("p", [])
+
+
+def build(curated, discovered, token, cache, prev=None):
     """curated: parsed list entries; discovered: {repo_url_lower: REST item}; cache: {repo: [up, platforms]}."""
     info = {u: from_rest(it) for u, it in discovered.items()}
     # Curated repos GitHub search didn't return still need stars/topics; every repo whose
@@ -426,7 +486,10 @@ def build(curated, discovered, token, cache):
         if x and x["archived"]:
             continue
         seen.add(u)
-        items.append(finalize(e, x, cache.get(u, [None, []])[1]))
+        plat = cache.get(u, [None, []])[1]
+        if not x and (prev or {}).get(u):  # not refreshed this run (time/rate limit): keep last data
+            plat = sorted(set(plat) | set(carry_over(e, prev[u])), key=PLATFORMS.index)
+        items.append(finalize(e, x, plat))
     for u, x in info.items():
         if u in seen or x["archived"] or x["st"] < MIN_STARS:
             continue
@@ -458,7 +521,8 @@ def main():
     if token:
         apps = load_json(OUT.parent / "apps.json", {})
         discovered = discover(token, apps)
-        items = build(curated, discovered, token, cache)
+        prev = {(e.get("r") or "").lower(): e for e in old if e.get("r")}
+        items = build(curated, discovered, token, cache, prev)
     else:
         # No token: refresh the curated lists, keep everything GitHub-derived from the last build.
         print("GITHUB_TOKEN not set: keeping GitHub data from the previous index")
@@ -466,10 +530,7 @@ def main():
         items = []
         for e in curated:
             p = prev.get((e.get("r") or "").lower())
-            if p:
-                e.update({k: p[k] for k in ("st", "up", "l", "li", "t", "k", "p") if k in p})
-                e["a"] = list(dict.fromkeys(e["a"] + p.get("a", [])))
-            items.append(finalize(e, None, p.get("p", []) if p else []))
+            items.append(finalize(e, None, carry_over(e, p) if p else []))
         cur = {(e.get("r") or "").lower() for e in items}
         items += [e for e in old if e.get("s") == "gh" and e["r"].lower() not in cur]
 

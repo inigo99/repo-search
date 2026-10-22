@@ -98,4 +98,31 @@ b.build([dict(e) for e in curated], discovered, "T", cache)
 asked = "\n".join(calls["gql"])
 assert '"notes"' not in asked and '"onlylisted"' in asked, asked  # curated-only repos always refreshed
 
+# A GraphQL batch that fails is split until the bad part is isolated; the rest is kept.
+def flaky_http(url, token, body=None, tries=4):
+    q = body["query"]
+    if '"broken"' in q:
+        raise b.urllib.error.URLError("server timeout")
+    data = {"rateLimit": {"remaining": 4000}}
+    for line in q.splitlines():
+        if ": repository(" in line:
+            alias, rest = line.split(": repository(")
+            name = rest.split('"')[1] + "/" + rest.split('"')[3]
+            data[alias.strip()] = gql_repo(name, 1, [])
+    return {"data": data}
+
+
+b.http_json = flaky_http
+urls = [f"https://github.com/o/r{i}" for i in range(40)] + ["https://github.com/o/broken"]
+got = b.graphql_repos(urls, "T", batch=50)
+assert len(got) == 40 and "https://github.com/o/broken" not in got, len(got)
+
+# Out of time: GraphQL stops, nothing raised, curated repos keep their previous GitHub data.
+b.BUDGET = 0
+assert b.graphql_repos(urls, "T") == {}
+prev = {"https://github.com/acme/onlylisted": {"st": 7, "up": "2026-01-01", "li": "MIT", "p": ["linux"], "a": ["slack"]}}
+items = {e["n"]: e for e in b.build([dict(curated[1])], {}, "T", {}, prev)}
+only = items["OnlyListed"]
+assert only["st"] == 7 and only["li"] == "MIT" and only["p"] == ["linux"] and only["a"] == ["slack"], only
+
 print("build tests passed")

@@ -28,8 +28,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - run: python scripts/test_build.py
-      - run: python scripts/build_index.py
+      - run: python -u scripts/test_build.py
+      - run: python -u scripts/build_index.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: node test.js
