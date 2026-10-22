@@ -439,7 +439,7 @@ def finalize(e, x, release_platforms):
         if e["s"] == "gh":
             e["n"] = x["name"]
         topics = x["topics"]
-        e["a"] = list(dict.fromkeys([a for a in e["a"]] + extract_alternatives(x["desc"], topics)))
+        e["a"] = list({a.lower(): a for a in reversed(e["a"] + extract_alternatives(x["desc"], topics))}.values())[::-1]
         if topics:
             e["t"] = topics[:8]
         if is_list(e["n"], topics):
@@ -460,7 +460,7 @@ def finalize(e, x, release_platforms):
 def carry_over(e, p):
     """Copy GitHub-derived fields of the previous index entry p into curated entry e."""
     e.update({k: p[k] for k in ("st", "up", "l", "li", "t", "k") if k in p})
-    e["a"] = list(dict.fromkeys(e["a"] + p.get("a", [])))
+    e["a"] = list({a.lower(): a for a in reversed(e["a"] + p.get("a", []))}.values())[::-1]
     return p.get("p", [])
 
 
