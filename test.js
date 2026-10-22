@@ -66,6 +66,25 @@ const names = (pl) => core.searchIndex(P("editor pdf"), mini, 10, pl).map((e) =>
 assert.deepStrictEqual(names([]), ["Any PDF", "Droid PDF", "Win PDF"]);
 assert.deepStrictEqual(names(["windows", "linux"]), ["Win PDF"]);
 
+// Ranking: entries without optional fields work; a product some repo replaces is an
+// alternatives search even without "alternativa"; popular and fresh beats obscure and stale;
+// awesome-lists sink below real projects.
+const now = new Date().toISOString().slice(0, 10);
+const idx = [
+  { n: "notion-sdk", d: "Notion API client", s: "gh", st: 50000, up: now },
+  { n: "acme/stale", d: "notes app", a: ["notion"], s: "gh", st: 5000, up: "2019-01-01" },
+  { n: "acme/notes", d: "notes app", a: ["notion"], s: "gh", st: 5000, up: now },
+  { n: "acme/tiny", d: "notes app", a: ["notion"], s: "gh", st: 3, up: now },
+  { n: "awesome-notion-alternatives", d: "list", a: ["notion"], s: "gh", st: 90000, up: now, k: 1 },
+  { n: "Bare" },
+];
+const ranked = core.searchIndex(P("Notion"), idx, 10).map((e) => e.n);
+assert.deepStrictEqual(ranked.slice(0, 3), ["acme/notes", "acme/stale", "acme/tiny"], ranked.join());
+assert.ok(ranked.indexOf("awesome-notion-alternatives") > 2 && !ranked.includes("notion-sdk"), ranked.join()); // SDKs are not alternatives
+assert.deepStrictEqual(core.searchIndex(P("alternativa a Notion"), idx, 10).map((e) => e.n)[0], "acme/notes");
+// Hyphenated names and topics match single words
+assert.ok(core.searchIndex(P("pdf"), [{ n: "acme/pdf-tools", s: "gh" }, { n: "x", t: ["pdf-editor"], s: "gh" }], 5).length === 2);
+
 // Sorting works on curated (st/up) and GitHub (stargazers_count/pushed_at) shapes; missing values last
 assert.deepStrictEqual(core.sortItems([{ st: 5 }, {}, { st: 50 }], "stars"), [{ st: 50 }, { st: 5 }, {}]);
 assert.deepStrictEqual(core.sortItems([{ pushed_at: "2024-01-01" }, { pushed_at: "2026-01-01" }], "updated").map((r) => r.pushed_at), ["2026-01-01", "2024-01-01"]);

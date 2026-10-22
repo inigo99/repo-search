@@ -18,22 +18,28 @@ Un "Google de repositorios": encuentra **alternativas gratuitas y de código abi
 - **Filtros por plataforma:** Windows, macOS y Linux (escritorio); Android e iOS (móvil). Puedes marcar varias y verás los resultados que funcionan en cualquiera de ellas.
 - **Ordenar:** por coincidencia, por estrellas o por actualización más reciente.
 - **Pestaña Saved:** guarda cualquier resultado en una o varias categorías que tú creas (p. ej. *Herramientas PDF*, *Trabajo*). Se guardan en tu navegador; usa **Export / Import** para pasarlos a otro dispositivo.
+- **Rápido y sin límite:** la mayoría de búsquedas no llaman a la API de GitHub; el límite solo afecta a las búsquedas en vivo.
 - **Búsquedas para compartir:** la URL guarda la búsqueda, las plataformas y el orden (p. ej. `?q=editor+pdf&p=windows,linux&sort=stars`).
 
 ## Cómo funciona
 
 1. **Interpretación de la búsqueda** (`core.js`): quita acentos, traduce palabras y expresiones del español con `data/es-en.json` y detecta programas comerciales conocidos con `data/apps.json` (p. ej. *Acrobat → pdf editor*).
-2. **Resultados curados** de `data/index.json` (unos 3.000 proyectos), sacados de
-   [awesome-oss-alternatives](https://github.com/RunaCapital/awesome-oss-alternatives),
-   [open-source-alternatives (btw)](https://github.com/btw-so/open-source-alternatives),
-   [instead-of](https://github.com/flick9000/instead-of),
-   [awesome-selfhosted](https://github.com/awesome-selfhosted/awesome-selfhosted),
-   [awesome-open-source-saas-alternatives](https://github.com/Anil-matcha/awesome-open-source-saas-alternatives) y
-   [open-source-alternatives (OpenAlternative)](https://github.com/piotrkulpinski/open-source-alternatives).
-   Cada repo se completa con estrellas, fecha de actualización y **plataformas**, detectadas a partir de los archivos de su último release (`.exe` → Windows, `.dmg` → macOS, `.AppImage`/`.deb` → Linux, `.apk` → Android, `.ipa` → iOS) y de sus topics.
-3. **Búsqueda en vivo en GitHub** con la API de búsqueda de GitHub; si una búsqueda larga no da resultados, reintenta con menos palabras. Con filtros de plataforma, cada plataforma se busca por separado (GitHub no tiene filtro de plataforma).
+2. **Índice propio** (`data/index.json`), en el que se busca dentro del navegador sin llamar a ninguna API. Una GitHub Action lo genera cada semana a partir de:
+   - **Listas curadas:** [awesome-oss-alternatives](https://github.com/RunaCapital/awesome-oss-alternatives),
+     [open-source-alternatives (btw)](https://github.com/btw-so/open-source-alternatives),
+     [instead-of](https://github.com/flick9000/instead-of),
+     [awesome-selfhosted](https://github.com/awesome-selfhosted/awesome-selfhosted),
+     [awesome-open-source-saas-alternatives](https://github.com/Anil-matcha/awesome-open-source-saas-alternatives) y
+     [open-source-alternatives (OpenAlternative)](https://github.com/piotrkulpinski/open-source-alternatives).
+   - **Repos descubiertos en GitHub** (20+ estrellas, no archivados): topics como `self-hosted`, `alternative` o `foss`, descripciones con *"alternative to"* y *"&lt;programa&gt; alternative"* para cada programa de `data/apps.json`.
 
-La página es estática (GitHub Pages). Una GitHub Action regenera el índice cada lunes.
+   De cada repo guarda estrellas, última actualización, lenguaje, licencia, topics y además:
+   - **Plataformas**, a partir de los archivos de su último release (`.exe` → Windows, `.dmg` → macOS, `.AppImage`/`.deb` → Linux, `.apk` → Android, `.ipa` → iOS) y de sus topics.
+   - **Qué sustituye**, leído de su descripción y sus topics (*"open-source alternative to Notion and Trello"* → `notion`, `trello`). Así, escribiendo solo el nombre de un programa, aunque no esté en `apps.json`, salen sus alternativas.
+3. **Ranking:** relevancia del texto (nombre, topics, categoría, descripción y "qué sustituye"), ponderada por estrellas y actividad reciente. Los repos archivados se descartan y las listas *awesome* bajan posiciones.
+4. **Búsqueda en vivo en GitHub:** se lanza sola solo cuando el índice encuentra pocos resultados, o con el botón **Search GitHub live too**. Con filtros de plataforma, cada plataforma se busca por separado (GitHub no tiene filtro de plataforma).
+
+La página es estática (GitHub Pages).
 
 ## Token de GitHub (opcional, recomendado)
 
@@ -84,22 +90,26 @@ $env:GITHUB_TOKEN = "github_pat_xxx"
   node cli.js "alternativa a Adobe Acrobat"
   node cli.js "editor de vídeo" --platform windows,linux --sort stars --limit 5
   node cli.js "notas" --platform android --json
+  node cli.js "editor pdf" --live          # busca también en GitHub en vivo
   ```
 - **Skill de IA:** copia `skill/repo-search/` en tu carpeta de skills (p. ej. `~/.claude/skills/`). El agente ejecuta la CLI y resume los resultados.
 
 ## Desarrollo
 
 ```bash
-GITHUB_TOKEN=github_pat_xxx python3 scripts/build_index.py   # regenera data/index.json (con token añade estrellas y plataformas)
-node test.js                                                 # tests sin conexión
+GITHUB_TOKEN=github_pat_xxx python3 scripts/build_index.py   # regenera el índice (~20 min; sin token solo actualiza las listas curadas)
+node test.js                                                 # tests sin conexión: buscador
+python3 scripts/test_build.py                                # tests sin conexión: generador del índice
 ```
 
 Para mejorar los resultados, añade palabras en español a `data/es-en.json` o programas a `data/apps.json` (`"nombre del programa": "what it does"`).
 
 ## Limitaciones
 
-- Las plataformas de los proyectos curados salen de los archivos de release y de los topics; los proyectos sin releases ni topics (o enlazados solo por su web) se ocultan cuando hay un filtro de plataforma activo.
-- En los resultados de GitHub, la plataforma se busca como palabra en el nombre, la descripción o los topics del repo.
+- Las plataformas salen de los archivos de release y de los topics; los proyectos sin releases ni topics de plataforma (o enlazados solo por su web) se ocultan cuando hay un filtro de plataforma activo.
+- El índice cubre los repos con 20+ estrellas que encuentran las búsquedas de descubrimiento; para el resto está la búsqueda en vivo.
+- El "qué sustituye" se extrae con reglas sencillas y tiene algo de ruido.
+- En los resultados en vivo de GitHub, la plataforma se busca como palabra en el nombre, la descripción o los topics del repo.
 - La traducción es palabra a palabra con un diccionario; las palabras en español que no conoce se buscan tal cual.
 - Los repos guardados son por navegador. Expórtalos antes de borrar los datos del navegador.
 

@@ -20,22 +20,28 @@ The same searches written in Spanish return the same results.
 - **Platform filters:** Windows, macOS, Linux (desktop) and Android, iOS (mobile). Pick several to see results that run on any of them.
 - **Sorting:** best match, most stars or recently updated.
 - **Saved tab:** save any result into one or more categories you create (e.g. *PDF tools*, *Work*). Saved repos live in your browser; use **Export / Import** to move them to another device.
+- **Fast and unlimited:** most searches never call the GitHub API, so the rate limit only matters for live searches.
 - **Shareable searches:** the URL keeps the query, platforms and sort (e.g. `?q=pdf+editor&p=windows,linux&sort=stars`).
 
 ## How it works
 
 1. **Query parsing** (`core.js`): normalises accents, translates Spanish words and phrases with `data/es-en.json`, and detects known proprietary apps with `data/apps.json` (e.g. *Acrobat → pdf editor*).
-2. **Curated results** from `data/index.json` (~3,000 projects), built from
-   [awesome-oss-alternatives](https://github.com/RunaCapital/awesome-oss-alternatives),
-   [open-source-alternatives (btw)](https://github.com/btw-so/open-source-alternatives),
-   [instead-of](https://github.com/flick9000/instead-of),
-   [awesome-selfhosted](https://github.com/awesome-selfhosted/awesome-selfhosted),
-   [awesome-open-source-saas-alternatives](https://github.com/Anil-matcha/awesome-open-source-saas-alternatives) and
-   [open-source-alternatives (OpenAlternative)](https://github.com/piotrkulpinski/open-source-alternatives).
-   Each repo is enriched with stars, last update and **platforms**, detected from its latest release files (`.exe` → Windows, `.dmg` → macOS, `.AppImage`/`.deb` → Linux, `.apk` → Android, `.ipa` → iOS) and its topics.
-3. **Live GitHub search** via the GitHub Search API, retrying with shorter queries when a long one returns nothing. With platform filters, each platform is searched separately (GitHub has no platform filter).
+2. **Prebuilt index** (`data/index.json`), searched in the browser with no API calls. A weekly GitHub Action builds it from:
+   - **Curated lists:** [awesome-oss-alternatives](https://github.com/RunaCapital/awesome-oss-alternatives),
+     [open-source-alternatives (btw)](https://github.com/btw-so/open-source-alternatives),
+     [instead-of](https://github.com/flick9000/instead-of),
+     [awesome-selfhosted](https://github.com/awesome-selfhosted/awesome-selfhosted),
+     [awesome-open-source-saas-alternatives](https://github.com/Anil-matcha/awesome-open-source-saas-alternatives) and
+     [open-source-alternatives (OpenAlternative)](https://github.com/piotrkulpinski/open-source-alternatives).
+   - **Repos discovered on GitHub** (20+ stars, not archived): topics such as `self-hosted`, `alternative` or `foss`, descriptions containing *"alternative to"*, and *"&lt;app&gt; alternative"* for every app in `data/apps.json`.
 
-The page is static (GitHub Pages). A GitHub Action rebuilds the index every Monday.
+   For every repo it stores stars, last update, language, license, topics and:
+   - **Platforms**, from its latest release files (`.exe` → Windows, `.dmg` → macOS, `.AppImage`/`.deb` → Linux, `.apk` → Android, `.ipa` → iOS) and topics.
+   - **What it replaces**, read from its description and topics (*"open-source alternative to Notion and Trello"* → `notion`, `trello`). So typing just a product name, even one not in `apps.json`, finds its alternatives.
+3. **Ranking:** text relevance (name, topics, category, description, "replaces"), weighted by stars and recent activity. Archived repos are left out and awesome-lists rank lower.
+4. **Live GitHub search** runs automatically only when the index finds few results, or with the **Search GitHub live too** button. With platform filters, each platform is searched separately (GitHub has no platform filter).
+
+The page is static (GitHub Pages).
 
 ## GitHub token (optional, recommended)
 
@@ -86,22 +92,26 @@ $env:GITHUB_TOKEN = "github_pat_xxx"
   node cli.js "alternative to Adobe Acrobat"
   node cli.js "video editor" --platform windows,linux --sort stars --limit 5
   node cli.js "notes" --platform android --json
+  node cli.js "pdf editor" --live          # also search GitHub live
   ```
 - **AI skill:** copy `skill/repo-search/` into your skills folder (e.g. `~/.claude/skills/`). The agent then runs the CLI and summarises the results.
 
 ## Develop
 
 ```bash
-GITHUB_TOKEN=github_pat_xxx python3 scripts/build_index.py   # rebuild data/index.json (token enables stars/platforms)
-node test.js                                                 # offline tests
+GITHUB_TOKEN=github_pat_xxx python3 scripts/build_index.py   # rebuild the index (~20 min; without a token only the curated lists are refreshed)
+node test.js                                                 # offline tests: search core
+python3 scripts/test_build.py                                # offline tests: index builder
 ```
 
 To improve results, add Spanish words to `data/es-en.json` or apps to `data/apps.json` (`"app name": "what it does"`).
 
 ## Limits
 
-- Platforms of curated entries come from release files and topics; projects without releases or topics (or linked only by website) are hidden when a platform filter is on.
-- GitHub results are matched by the platform name appearing in the repo name, description or topics.
+- Platforms come from release files and topics; projects without releases or platform topics (or linked only by website) are hidden when a platform filter is on.
+- The index covers repos with 20+ stars found by the discovery queries; anything else needs the live search.
+- "Replaces" is extracted with simple rules and has some noise.
+- Live GitHub results are matched by the platform name appearing in the repo name, description or topics.
 - Translation is word-by-word with a dictionary; unknown Spanish words pass through unchanged.
 - Saved repos are per browser. Export them before clearing browser data.
 

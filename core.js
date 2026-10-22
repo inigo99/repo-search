@@ -48,26 +48,54 @@
 
   const PLATFORMS = ["windows", "macos", "linux", "android", "ios"];
 
-  // Rank curated entries from data/index.json. `platforms`: keep entries known
-  // to run on at least one of them (entries with unknown platforms are dropped).
+  // Normalised text of every entry, computed once per loaded index.
+  // Fields are optional in index.json (empty ones are left out to keep it small).
+  const prepared = new WeakMap();
+  function prepare(index) {
+    if (prepared.has(index)) return prepared.get(index);
+    const dash = (s) => { const n = norm(s || ""); return n.includes("-") ? n + " " + n.replace(/-/g, " ") : n; };
+    const rows = index.map((e) => ({
+      name: dash(e.n), cat: norm(e.c || ""), desc: norm(e.d || ""),
+      topics: dash((e.t || []).join(" ")), alts: (e.a || []).map(norm).filter(Boolean),
+    }));
+    const targets = new Set(rows.flatMap((r) => r.alts));
+    const out = { rows, targets };
+    prepared.set(index, out);
+    return out;
+  }
+
+  // Popularity and freshness multiplier: relevance decides what matches,
+  // this decides the order among good matches.
+  const DAY = 864e5;
+  function quality(e, now = Date.now()) {
+    const stars = 1 + Math.log10((e.st || 0) + 1) / 2;          // 0★ 1, 100★ 2, 10k★ 3
+    const age = e.up ? (now - Date.parse(e.up)) / DAY : null;
+    const fresh = age == null ? 0.9 : age < 365 ? 1 : age < 730 ? 0.85 : 0.6;
+    return stars * fresh * (e.k ? 0.35 : 1);                    // awesome-lists sink
+  }
+
+  // Rank entries of data/index.json. `platforms`: keep entries known to run on at
+  // least one of them (entries with unknown platforms are dropped).
   function searchIndex(p, index, limit = 30, platforms = []) {
-    if (platforms.length) index = index.filter((e) => (e.p || []).some((x) => platforms.includes(x)));
+    const { rows, targets } = prepare(index);
     const words = [...new Set([...p.terms, ...(p.func ? p.func.split(" ") : [])])].filter((w) => w.length > 1);
     const need = Math.max(1, Math.ceil(words.length * 0.6));
-    // "alternativa a Moodle": Moodle is unknown to apps.json, but the lists may still know it.
-    const target = p.app || (p.alt ? p.terms.join(" ") : null);
+    // "alternativa a Moodle", or just "Notion": any product some repo says it replaces.
+    const typed = p.terms.join(" ");
+    const target = p.app || (p.alt || targets.has(typed) ? typed : null);
     const scored = [];
-    for (const e of index) {
+    index.forEach((e, i) => {
+      if (platforms.length && !(e.p || []).some((x) => platforms.includes(x))) return;
+      const r = rows[i];
       let score = 0, matched = 0;
-      if (target && e.a.some((a) => { const x = norm(a); return x && (hasWords(x, target) || hasWords(target, x)); }))
-        score += 10;
-      const name = norm(e.n), cat = norm(e.c), desc = norm(e.d);
+      if (target && r.alts.some((x) => hasWords(x, target) || hasWords(target, x))) score += 10;
       for (const w of words) {
-        const s = (hasWords(name, w) ? 3 : 0) + (hasWords(cat, w) ? 2 : 0) + (hasWords(desc, w) ? 1 : 0);
+        const s = (hasWords(r.name, w) ? 3 : 0) + (hasWords(r.topics, w) ? 2 : 0)
+          + (hasWords(r.cat, w) ? 2 : 0) + (hasWords(r.desc, w) ? 1 : 0);
         if (s) { score += s; matched++; }
       }
-      if (score >= 10 || (matched >= need && score > 0)) scored.push({ ...e, score });
-    }
+      if (score >= 10 || (matched >= need && score > 0)) scored.push({ ...e, score: score * quality(e) });
+    });
     // Same project often appears in several lists: keep the best-scored one.
     const seen = new Set();
     return scored.sort((a, b) => b.score - a.score)

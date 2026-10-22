@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // Usage: node cli.js "alternativa a adobe acrobat" [--json] [--limit 10]
-//        [--platform windows,linux] [--sort match|stars|updated]
+//        [--platform windows,linux] [--sort match|stars|updated] [--live]
+// Searches the prebuilt index; also searches GitHub live when the index finds
+// fewer than `limit` results, or always with --live.
 // Optional: GITHUB_TOKEN env var for higher rate limits.
 const fs = require("fs");
 const path = require("path");
@@ -28,34 +30,38 @@ async function main() {
   const bad = platforms.filter((p) => !core.PLATFORMS.includes(p));
   if (!query || bad.length || !["match", "stars", "updated"].includes(sort)) {
     console.error('Usage: node cli.js "<query in English or Spanish>" [--json] [--limit N]\n' +
-      `       [--platform ${core.PLATFORMS.join(",")}] [--sort match|stars|updated]`);
+      `       [--platform ${core.PLATFORMS.join(",")}] [--sort match|stars|updated] [--live]`);
     process.exit(1);
   }
   const [dict, apps, index] = await Promise.all(["es-en.json", "apps.json", "index.json"].map(load));
   const p = core.parseQuery(query, dict, apps);
-  const curated = core.sortItems(core.searchIndex(p, index, 30, platforms), sort).slice(0, limit);
+  const results = core.sortItems(core.searchIndex(p, index, Math.max(limit, 30), platforms), sort).slice(0, limit);
   let github = { repos: [], queries: [] }, error = null;
-  try {
-    github = await core.searchGithub(p, { token: process.env.GITHUB_TOKEN, platforms });
-  } catch (e) {
-    error = e.message;
+  if (args.includes("--live") || results.length < limit) {
+    try {
+      github = await core.searchGithub(p, { token: process.env.GITHUB_TOKEN, platforms });
+    } catch (e) {
+      error = e.message;
+    }
   }
-  const repos = core.sortItems(github.repos, sort).slice(0, limit).map((r) => ({
+  const known = new Set(results.map((e) => (e.r || "").toLowerCase()));
+  const repos = core.sortItems(github.repos.filter((r) => !known.has(r.html_url.toLowerCase())), sort).slice(0, limit).map((r) => ({
     name: r.full_name, url: r.html_url, stars: r.stargazers_count,
     language: r.language, description: r.description, topics: r.topics,
     updated: r.pushed_at, platforms: r.platforms,
   }));
 
   if (json) {
-    console.log(JSON.stringify({ interpreted: p, curated, github: repos, githubQueries: github.queries, error }, null, 2));
+    console.log(JSON.stringify({ interpreted: p, results, github: repos, githubQueries: github.queries, error }, null, 2));
     return;
   }
   console.log(`Interpreted as: ${p.app ? `alternative to "${p.app}" (${p.func})` : ""} ${p.terms.join(" ")}`.trim()
     + (platforms.length ? ` — on ${platforms.join(" or ")}` : ""));
-  console.log("\n## Curated alternatives");
-  if (!curated.length) console.log("(none)");
-  for (const e of curated) console.log(`- ${e.n}: ${e.d || e.c} — ${e.r || e.u}${e.a.length ? ` (replaces ${e.a.join(", ")})` : ""}${e.p ? ` [${e.p.join(", ")}]` : ""}`);
-  console.log(`\n## GitHub${github.queries.length ? ` (queries: ${github.queries.join(" | ")})` : ""}`);
+  console.log("\n## Results");
+  if (!results.length) console.log("(none)");
+  for (const e of results) console.log(`- ${e.n}: ${e.d || e.c || ""} — ${e.r || e.u}${e.a?.length ? ` (replaces ${e.a.join(", ")})` : ""}${e.st != null ? ` ★${e.st}` : ""}${e.p ? ` [${e.p.join(", ")}]` : ""}`);
+  if (!github.queries.length && !error) return;
+  console.log(`\n## Live from GitHub${github.queries.length ? ` (queries: ${github.queries.join(" | ")})` : ""}`);
   if (error) console.log(`(error: ${error})`);
   else if (!repos.length) console.log("(none)");
   for (const r of repos) console.log(`- ${r.name} ★${r.stars} [${r.language || "?"}]: ${r.description || ""} — ${r.url}`);

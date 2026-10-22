@@ -14,6 +14,7 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -22,14 +23,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+      - run: python scripts/test_build.py
       - run: python scripts/build_index.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: node test.js
       - name: Commit if changed
         run: |
-          git diff --quiet data/index.json && exit 0
+          git diff --quiet data/ && exit 0
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -am "Update curated index"
+          git add data/
+          git commit -m "Update index"
           git push

@@ -146,7 +146,7 @@
     <a href="https://github.com/flick9000/instead-of">instead-of</a>,
     <a href="https://github.com/awesome-selfhosted/awesome-selfhosted">awesome-selfhosted</a>,
     <a href="https://github.com/Anil-matcha/awesome-open-source-saas-alternatives">awesome-open-source-saas-alternatives</a> and
-    <a href="https://github.com/piotrkulpinski/open-source-alternatives">OpenAlternative</a>, plus the GitHub Search API.
+    <a href="https://github.com/piotrkulpinski/open-source-alternatives">OpenAlternative</a>, plus repos discovered on GitHub (rebuilt weekly) and live GitHub search.
     · <a href="https://github.com/inigo99/repo-search">Source</a></footer>
 </main>
 <dialog id="dlg" aria-labelledby="dlg-title">
@@ -208,17 +208,22 @@ function card(item, meta) {
     ${item.desc ? `<p>${esc(item.desc)}</p>` : ""}<div class="m">${meta.filter(Boolean).join("")}</div></div>`;
 }
 
-const curatedCard = (e) => card({ name: e.n, url: e.r || e.u, desc: e.d, stars: e.st }, [
-  stars(e.st), tag(e.c), plats(e.p), e.a.length ? txt("replaces " + e.a.join(", ")) : "", date(e.up),
-  e.r && e.u !== e.r ? `<a href="${esc(safeUrl(e.u))}" target="_blank" rel="noopener">website</a>` : ""]);
+const indexCard = (e) => card({ name: e.n, url: e.r || e.u, desc: e.d, stars: e.st }, [
+  stars(e.st), e.s !== "gh" ? `<span class="tag" title="Listed in a curated awesome list">curated</span>` : "",
+  tag(e.c), txt(e.l), txt(e.li), plats(e.p), e.a?.length ? txt("replaces " + e.a.slice(0, 4).join(", ")) : "",
+  date(e.up), ...(e.t || []).slice(0, 3).map(tag),
+  e.r && e.u && e.u !== e.r ? `<a href="${esc(safeUrl(e.u))}" target="_blank" rel="noopener">website</a>` : ""]);
 
 const githubCard = (r) => card({ name: r.full_name, url: r.html_url, desc: r.description, stars: r.stargazers_count }, [
   stars(r.stargazers_count), txt(r.language), r.license ? txt(r.license.spdx_id) : "", plats(r.platforms),
   date(r.pushed_at), ...(r.topics || []).slice(0, 4).map(tag)]);
 
 // ---------- search ----------
+// Results come from the prebuilt index (instant, no rate limit). Live GitHub search
+// runs automatically only when the index finds little, or on demand.
+const FEW = 8;
 const platforms = () => [...document.querySelectorAll("input[name=platform]:checked")].map((i) => i.value);
-let last = null; // { p, curated, repos, error, loading }
+let last = null; // { query, key, p, found, live: null | { loading, repos, error } }
 
 function setUrl(q) {
   const u = new URLSearchParams({ q });
@@ -229,7 +234,7 @@ function setUrl(q) {
 
 function render() {
   if (!last) return;
-  const { p, curated, repos, error, loading } = last;
+  const { p, found, live } = last;
   const mode = $("sort").value;
   const pl = platforms();
   const on = pl.length ? ` · on <b>${esc(pl.map((x) => PLAT_LABEL[x]).join(" or "))}</b>` : "";
@@ -238,20 +243,34 @@ function render() {
     : `Searching for <b>${esc(p.terms.join(" ") || last.query)}</b>`) + on;
 
   shown.clear();
-  const cur = RepoSearch.sortItems(curated, mode).slice(0, 12);
-  let html = "";
-  if (cur.length) html += `<h2>Curated alternatives</h2>` + cur.map(curatedCard).join("");
-  else if (pl.length) html += `<h2>Curated alternatives</h2><p class="note">None with known support for that platform.</p>`;
+  const list = RepoSearch.sortItems(found, mode).slice(0, 30);
+  let html = `<h2>Results</h2>`;
+  html += list.length ? list.map(indexCard).join("")
+    : `<p class="note">Nothing in the index${pl.length ? " for that platform" : ""}.</p>`;
 
-  html += `<h2>On GitHub</h2>`;
-  if (loading) html += `<p class="note">Loading…</p>`;
-  else if (error) html += `<p class="note err">${esc(error)}</p>`;
+  html += `<h2>Live from GitHub</h2>`;
+  if (!live) html += `<button class="ghost" id="live">Search GitHub live too</button>`;
+  else if (live.loading) html += `<p class="note">Loading…</p>`;
+  else if (live.error) html += `<p class="note err">${esc(live.error)}</p>`;
   else {
-    const known = new Set(cur.map((e) => (e.r || "").toLowerCase()));
-    const list = RepoSearch.sortItems(repos.filter((r) => !known.has(r.html_url.toLowerCase())), mode).slice(0, 30);
-    html += list.length ? list.map(githubCard).join("") : `<p class="note">No GitHub results. Try fewer or different words.</p>`;
+    const known = new Set(list.map((e) => (e.r || "").toLowerCase()));
+    const extra = RepoSearch.sortItems(live.repos.filter((r) => !known.has(r.html_url.toLowerCase())), mode).slice(0, 30);
+    html += extra.length ? extra.map(githubCard).join("") : `<p class="note">No more results on GitHub. Try fewer or different words.</p>`;
   }
   $("out").innerHTML = html;
+  if ($("live")) $("live").onclick = () => searchLive(runId);
+}
+
+async function searchLive(id) {
+  last.live = { loading: true };
+  render();
+  try {
+    const { repos } = await RepoSearch.searchGithub(last.p, { token: store.get("gh_token"), platforms: platforms() });
+    if (id === runId) last.live = { repos };
+  } catch (e) {
+    if (id === runId) last.live = { error: e.message };
+  }
+  if (id === runId) render();
 }
 
 let runId = 0;
@@ -262,18 +281,14 @@ async function run(query) {
   document.body.classList.add("searched");
   $("q").value = query;
   document.title = `${query} — Repo Search`;
+  $("out").innerHTML = `<p class="note">Loading the index…</p>`;
   const [dict, apps, index] = await data;
+  if (id !== runId) return;
   const p = RepoSearch.parseQuery(query, dict, apps);
   const pl = platforms();
-  last = { query, key: `${query}|${pl}`, p, curated: RepoSearch.searchIndex(p, index, 30, pl), repos: [], loading: true };
-  render();
-  try {
-    const { repos } = await RepoSearch.searchGithub(p, { token: store.get("gh_token"), platforms: pl });
-    if (id === runId) Object.assign(last, { repos, loading: false });
-  } catch (e) {
-    if (id === runId) Object.assign(last, { error: e.message, loading: false });
-  }
-  if (id === runId) render();
+  last = { query, key: `${query}|${pl}`, p, found: RepoSearch.searchIndex(p, index, 60, pl), live: null };
+  if (last.found.length < FEW) await searchLive(id);
+  else render();
 }
 
 $("f").onsubmit = (e) => {
