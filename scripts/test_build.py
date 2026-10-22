@@ -125,4 +125,6 @@ items = {e["n"]: e for e in b.build([dict(curated[1])], {}, "T", {}, prev)}
 only = items["OnlyListed"]
 assert only["st"] == 7 and only["li"] == "MIT" and only["p"] == ["linux"] and only["a"] == ["slack"], only
 
+assert b.dedupe(["TeamViewer", "AnyDesk", "teamviewer", "rdp"]) == ["TeamViewer", "AnyDesk", "rdp"]
+
 print("build tests passed")
