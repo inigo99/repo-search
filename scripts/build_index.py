@@ -393,8 +393,10 @@ def graphql_repos(urls, token, batch=50):
                 print(f"  graphql skipped {len(chunk)} repos: {e}")
             return
         for j, u in enumerate(chunk):
-            if data.get(f"r{j}"):  # missing: renamed, deleted or private
+            if data.get(f"r{j}"):
                 info[u] = parse_repo(data[f"r{j}"])
+            elif "rateLimit" in data:  # the query ran: the repo is gone (renamed, deleted or private)
+                info[u] = None
         left[0] = (data.get("rateLimit") or {}).get("remaining", left[0])
 
     for i in range(0, len(urls), batch):
@@ -473,17 +475,28 @@ def carry_over(e, p):
 
 
 def build(curated, discovered, token, cache, prev=None):
-    """curated: parsed list entries; discovered: {repo_url_lower: REST item}; cache: {repo: [up, platforms]}."""
+    """curated: parsed list entries; discovered: {repo_url_lower: REST item}; cache: {repo: [up, platforms]};
+    prev: {repo_url_lower: entry} of the last index.
+
+    The index accumulates: repos discovered in earlier runs stay even if this run's search
+    missed them (search results vary and get rate-limited). They are refreshed through
+    GraphQL and dropped only when GitHub says they are gone or archived."""
+    prev = prev or {}
     info = {u: from_rest(it) for u, it in discovered.items()}
-    # Curated repos GitHub search didn't return still need stars/topics; every repo whose
-    # last push changed since the cached check needs its release assets re-read.
-    all_repos = {e["r"].lower() for e in curated if e.get("r")} | set(info)
-    need = sorted(u for u in all_repos if u not in info or cache.get(u, [None])[0] != info[u]["up"])
+    curated_repos = {e["r"].lower() for e in curated if e.get("r")}
+    known = {u for u, e in prev.items() if e.get("s") == "gh"} - set(info)
+    all_repos = curated_repos | set(info) | known
+    # Re-read release assets when the last push changed; curated repos search didn't
+    # return need everything. Previously discovered ones go last: if time runs out
+    # they simply keep last week's data.
+    need = sorted(u for u in curated_repos | set(info) if u not in info or cache.get(u, [None])[0] != info[u]["up"])
+    need += sorted(known - set(need))
     if token and need:
-        print(f"GraphQL for {len(need)} repos")
+        print(f"GraphQL for {len(need)} repos ({len(known)} kept from earlier runs)")
         for u, x in graphql_repos(need, token).items():
             info[u] = x
-            cache[u] = [x["up"], detect_platforms((), x.pop("assets"))]
+            if x:
+                cache[u] = [x["up"], detect_platforms((), x.pop("assets"))]
     for u in [u for u in cache if u not in all_repos]:  # forget repos no longer indexed
         del cache[u]
 
@@ -495,14 +508,16 @@ def build(curated, discovered, token, cache, prev=None):
             continue
         seen.add(u)
         plat = cache.get(u, [None, []])[1]
-        if not x and (prev or {}).get(u):  # not refreshed this run (time/rate limit): keep last data
+        if not x and prev.get(u):  # not refreshed this run (time/rate limit): keep last data
             plat = sorted(set(plat) | set(carry_over(e, prev[u])), key=PLATFORMS.index)
         items.append(finalize(e, x, plat))
-    for u, x in info.items():
-        if u in seen or x["archived"] or x["st"] < MIN_STARS:
-            continue
-        e = {"n": x["name"], "r": "https://github.com/" + x["name"], "d": "", "c": "", "a": [], "s": "gh"}
-        items.append(finalize(e, x, cache.get(u, [None, []])[1]))
+    for u in sorted((set(info) | known) - seen):
+        x = info.get(u, "unchecked")
+        if x == "unchecked":           # kept from an earlier run, not refreshed this time
+            items.append(dict(prev[u]))
+        elif x and not x["archived"] and x["st"] >= MIN_STARS:
+            e = {"n": x["name"], "r": "https://github.com/" + x["name"], "d": "", "c": "", "a": [], "s": "gh"}
+            items.append(finalize(e, x, cache.get(u, [None, []])[1]))
     return items
 
 

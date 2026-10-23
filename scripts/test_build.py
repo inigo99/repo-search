@@ -125,6 +125,21 @@ items = {e["n"]: e for e in b.build([dict(curated[1])], {}, "T", {}, prev)}
 only = items["OnlyListed"]
 assert only["st"] == 7 and only["li"] == "MIT" and only["p"] == ["linux"] and only["a"] == ["slack"], only
 
+# Accumulation: repos from earlier runs stay when search misses them; refreshed via GraphQL,
+# dropped when gone; kept as they were when GraphQL can't reach them.
+b.BUDGET = 10_000
+b.http_json = fake_http
+prev = {
+    "https://github.com/acme/notes": {"n": "acme/notes", "r": "https://github.com/acme/notes", "s": "gh", "st": 1},
+    "https://github.com/acme/gone": {"n": "acme/gone", "r": "https://github.com/acme/gone", "s": "gh", "st": 50},
+}
+items = {e["n"]: e for e in b.build([], {}, "T", {}, prev)}
+assert items["acme/notes"]["st"] == 900 and "acme/gone" not in items, items  # refreshed / gone
+b.BUDGET = 0
+items = {e["n"]: e for e in b.build([], {}, "T", {}, prev)}
+assert items["acme/notes"]["st"] == 1 and items["acme/gone"]["st"] == 50, items  # no time: kept as is
+b.BUDGET = 10_000
+
 assert b.dedupe(["TeamViewer", "AnyDesk", "teamviewer", "rdp"]) == ["TeamViewer", "AnyDesk", "rdp"]
 
 print("build tests passed")
