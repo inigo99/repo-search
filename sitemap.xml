@@ -25,7 +25,9 @@
   <url><loc>https://inigo99.github.io/repo-search/alternatives/apollo/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/apple/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/apple-reachability/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/apple-silicon/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/arc/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/artifactory/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/asana/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/auth0/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/aws-sagemaker/</loc></url>
@@ -36,6 +38,7 @@
   <url><loc>https://inigo99.github.io/repo-search/alternatives/c64/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/calendly/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/calibre/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/canny/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/canva/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/capcut/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/captcha/</loc></url>
@@ -48,6 +51,7 @@
   <url><loc>https://inigo99.github.io/repo-search/alternatives/claude/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/claude-code/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/claude-cowork/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/claude-duet/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/claude-managed-agents/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/claude-tag/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/clay/</loc></url>
@@ -68,6 +72,7 @@
   <url><loc>https://inigo99.github.io/repo-search/alternatives/coolify/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/copilot/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/core-data/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/crawl4ai/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/cron/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/css/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/cursor/</loc></url>
@@ -76,6 +81,7 @@
   <url><loc>https://inigo99.github.io/repo-search/alternatives/devin/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/dia/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/discord/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/discourse/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/disqus/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/docker/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/docusign/</loc></url>
@@ -200,7 +206,9 @@
   <url><loc>https://inigo99.github.io/repo-search/alternatives/ollama/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/onenote/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/openai/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/openai-dots/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/openclaw/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/openrouter/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/openvpn/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/opera/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/opus-clip/</loc></url>
@@ -210,6 +218,7 @@
   <url><loc>https://inigo99.github.io/repo-search/alternatives/overleaf/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/pagerduty/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/papertrail/</loc></url>
+  <url><loc>https://inigo99.github.io/repo-search/alternatives/perplexity/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/perplexity-comet/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/photoshop/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/php/</loc></url>
@@ -223,7 +232,6 @@
   <url><loc>https://inigo99.github.io/repo-search/alternatives/premiere/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/prometheus/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/proxifier/</loc></url>
-  <url><loc>https://inigo99.github.io/repo-search/alternatives/puppeteer/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/putty/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/python/</loc></url>
   <url><loc>https://inigo99.github.io/repo-search/alternatives/quickbooks/</loc></url>
